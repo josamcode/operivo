@@ -1,0 +1,329 @@
+// Opervio — intentionally small schema. Real usage decides what grows.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Single local founder.
+model Founder {
+  id            String    @id @default("founder")
+  name          String
+  language      String    @default("en")
+  work          String    @default("")
+  plate         String    @default("")
+  timeAvailable String    @default("")
+  links         Json      @default("{}")
+  commStyle     String    @default("short")
+  autonomy      String    @default("balanced")
+  alwaysAsk     String[]
+  timezone      String    @default("UTC")
+  setupAt       DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+/// Key/value settings: "ai", "tools".
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+/// An area of the founder's life/work (Clients, Content, Learning…). Confirmed by the founder.
+model Focus {
+  id          String        @id @default(cuid())
+  key         String        @unique
+  name        String
+  kind        String
+  why         String        @default("")
+  cadence     String?
+  status      String        @default("active")
+  order       Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  page        Page?
+  agents      Agent[]
+  tasks       Task[]
+  artifacts   Artifact[]
+  memories    Memory[]
+  decisions   Decision[]
+  collections Collection[]
+  records     DataRecord[]
+  todayItems  TodayItem[]
+  routines    Routine[]
+  metrics     MetricPoint[]
+}
+
+/// AI-composed page. `spec` is a PageSpec validated with Zod before every write.
+model Page {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  icon        String
+  description String?
+  spec        Json
+  order       Int      @default(0)
+  focusId     String?  @unique
+  focus       Focus?   @relation(fields: [focusId], references: [id], onDelete: SetNull)
+  createdBy   String   @default("noor")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+/// Typed structured data the AI creates (leads, scripts, workouts…). `def` is a CollectionDef.
+model Collection {
+  id        String       @id @default(cuid())
+  key       String       @unique
+  def       Json
+  focusId   String?
+  focus     Focus?       @relation(fields: [focusId], references: [id], onDelete: SetNull)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  records   DataRecord[]
+}
+
+model DataRecord {
+  id           String     @id @default(cuid())
+  collectionId String
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  externalKey  String?
+  data         Json
+  focusId      String?
+  focus        Focus?     @relation(fields: [focusId], references: [id], onDelete: SetNull)
+  agentId      String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([collectionId, externalKey])
+  @@index([collectionId, updatedAt])
+}
+
+model Agent {
+  id        String     @id @default(cuid())
+  name      String
+  role      String
+  objective String     @default("")
+  provider  String     @default("auto")
+  model     String     @default("default")
+  effort    String     @default("auto")
+  status    String     @default("idle")
+  focusId   String?
+  focus     Focus?     @relation(fields: [focusId], references: [id], onDelete: SetNull)
+  temporary Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  tasks     Task[]
+  runs      Run[]
+  artifacts Artifact[]
+  decisions Decision[]
+}
+
+model Task {
+  id              String     @id @default(cuid())
+  title           String
+  objective       String
+  taskType        String     @default("general")
+  deliverable     String     @default("")
+  successCriteria String[]
+  expectedOutputs String[]
+  effort          String     @default("auto")
+  status          String     @default("queued")
+  agentId         String
+  agent           Agent      @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  focusId         String?
+  focus           Focus?     @relation(fields: [focusId], references: [id], onDelete: SetNull)
+  workdir         String?
+  attempts        Int        @default(0)
+  summary         String?
+  verdict         Json?
+  routineId       String?
+  /// Feedback or founder answer to pass into the next run (correction loop / resumed work).
+  followUp        String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  startedAt       DateTime?
+  finishedAt      DateTime?
+  runs            Run[]
+  artifacts       Artifact[]
+  decisions       Decision[]
+
+  @@index([status, createdAt])
+}
+
+model Run {
+  id           String     @id @default(cuid())
+  taskId       String
+  task         Task       @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  agentId      String
+  agent        Agent      @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  attempt      Int        @default(1)
+  provider     String
+  model        String
+  effort       String
+  status       String     @default("preparing")
+  prompt       Json?
+  sessionId    String?
+  result       String?
+  error        String?
+  verdict      Json?
+  progress     Json?
+  lastActivity String?
+  toolsUsed    String[]
+  costUsd      Float?
+  startedAt    DateTime   @default(now())
+  finishedAt   DateTime?
+  events       RunEvent[]
+  artifacts    Artifact[]
+
+  @@index([agentId, startedAt])
+}
+
+model RunEvent {
+  id     String   @id @default(cuid())
+  runId  String
+  run    Run      @relation(fields: [runId], references: [id], onDelete: Cascade)
+  ts     DateTime @default(now())
+  kind   String
+  label  String
+  detail Json?
+
+  @@index([runId, ts])
+}
+
+model Artifact {
+  id        String   @id @default(cuid())
+  title     String
+  type      String
+  path      String   @unique
+  sizeBytes Int      @default(0)
+  summary   String?
+  preview   Json?
+  agentId   String?
+  agent     Agent?   @relation(fields: [agentId], references: [id], onDelete: SetNull)
+  taskId    String?
+  task      Task?    @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  runId     String?
+  run       Run?     @relation(fields: [runId], references: [id], onDelete: SetNull)
+  focusId   String?
+  focus     Focus?   @relation(fields: [focusId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
+}
+
+model Memory {
+  id        String   @id @default(cuid())
+  kind      String
+  content   String
+  source    String
+  scope     String   @default("global")
+  focusId   String?
+  focus     Focus?   @relation(fields: [focusId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([kind])
+}
+
+model Decision {
+  id             String    @id @default(cuid())
+  kind           String
+  title          String
+  recommendation String?
+  why            String?
+  options        Json      @default("[]")
+  details        String?
+  status         String    @default("open")
+  choice         String?
+  note           String?
+  payload        Json?
+  agentId        String?
+  agent          Agent?    @relation(fields: [agentId], references: [id], onDelete: SetNull)
+  taskId         String?
+  task           Task?     @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  focusId        String?
+  focus          Focus?    @relation(fields: [focusId], references: [id], onDelete: SetNull)
+  createdAt      DateTime  @default(now())
+  resolvedAt     DateTime?
+
+  @@index([status])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  role      String
+  content   String   @default("")
+  status    String   @default("done")
+  activity  String[]
+  refs      Json     @default("[]")
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+/// Things the founder personally should do on a given day.
+model TodayItem {
+  id        String   @id @default(cuid())
+  date      String
+  title     String
+  minutes   Int?
+  done      Boolean  @default(false)
+  order     Int      @default(0)
+  focusId   String?
+  focus     Focus?   @relation(fields: [focusId], references: [id], onDelete: SetNull)
+  source    String   @default("noor")
+  createdAt DateTime @default(now())
+
+  @@index([date])
+}
+
+model DayNote {
+  date      String   @id
+  note      String
+  updatedAt DateTime @updatedAt
+}
+
+model Routine {
+  id        String    @id @default(cuid())
+  title     String
+  schedule  String
+  kind      String
+  message   String?
+  agent     Json?
+  task      Json?
+  focusId   String?
+  focus     Focus?    @relation(fields: [focusId], references: [id], onDelete: SetNull)
+  enabled   Boolean   @default(true)
+  lastRunAt DateTime?
+  nextRunAt DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  kind      String
+  title     String
+  body      String?
+  link      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model MetricPoint {
+  id      String   @id @default(cuid())
+  key     String
+  value   Float
+  note    String?
+  focusId String?
+  focus   Focus?   @relation(fields: [focusId], references: [id], onDelete: SetNull)
+  ts      DateTime @default(now())
+
+  @@index([key, ts])
+}
