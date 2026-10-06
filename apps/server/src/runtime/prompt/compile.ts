@@ -63,7 +63,7 @@ export function availableTools(i: SkeletonInput): ToolInfo[] {
       id: 'browser',
       label: 'The founder’s own Chrome (Claude in Chrome)',
       usage:
-        'Their real browser with their tabs and signed-in sessions, via the claude-in-chrome tools. Open your OWN new tabs for your work and close them when done; never read, navigate, type into or close tabs you did not open. The first time you act on a site, Chrome may ask the founder to approve — if a tool reports it needs permission, wait briefly and retry, and keep working on other parts meanwhile. Never type passwords; if a login is required, ask_founder.',
+        'Their real browser with their tabs and signed-in sessions, via the claude-in-chrome tools. Open your OWN new tabs for your work and close them when done; never read, navigate, type into or close tabs you did not open. Chrome asks the founder to approve each new session: if a tool returns "requires permission", call report_progress("Waiting for your OK in Chrome"), then wait 30 seconds (shell sleep) and retry — keep retrying for up to 10 minutes, doing other parts of the task in between. Do not give up on the first refusal. Never type passwords; if a login is required, ask_founder.',
     });
   } else if (browser === 'separate') {
     tools.push({
