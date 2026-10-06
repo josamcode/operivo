@@ -19,7 +19,7 @@ const IMPORTS: Record<string, string> = {
   pillow: 'PIL',
   'python-docx': 'docx',
   'python-pptx': 'pptx',
-  pymupdf: 'fitz',
+  pymupdf: 'pymupdf',
 };
 
 export const venvPython = () =>

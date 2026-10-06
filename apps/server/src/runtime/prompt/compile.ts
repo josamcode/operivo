@@ -69,7 +69,7 @@ export function availableTools(i: SkeletonInput): ToolInfo[] {
   tools.push({
     id: 'python',
     label: 'Python',
-    usage: `Isolated env: ${i.pythonPath} (pandas, numpy, openpyxl, matplotlib, Pillow, python-docx, python-pptx, PyMuPDF). Run scripts with it or use the run_python tool. Use it when it is the best tool (data, spreadsheets, documents, charts) — not for everything.`,
+    usage: `Isolated env: ${i.pythonPath} (pandas, numpy, openpyxl, matplotlib, Pillow, python-docx, python-pptx, PyMuPDF via `import pymupdf`). Run scripts with it or use the run_python tool. Use it when it is the best tool (data, spreadsheets, documents, charts) — not for everything.`,
   });
   tools.push({
     id: 'opervio',
