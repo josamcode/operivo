@@ -311,7 +311,7 @@ export function HomePage() {
           </div>
         ) : (
           <>
-            <header className="space-y-1">
+            <header className="space-y-1" dir={home.founder.language === 'ar' ? 'rtl' : undefined}>
               <h1 dir="auto" className="text-[28px] leading-tight font-semibold tracking-[-0.025em]">
                 {greeting(home.founder.language, home.founder.name)}
               </h1>

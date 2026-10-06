@@ -235,7 +235,7 @@ function KanbanColumn({ id, label, count, children }: { id: string; label: strin
         <AutoDir text={label} className="truncate font-medium" />
         <span className="num text-ink-3">{count}</span>
       </div>
-      <div className="flex min-h-12 flex-col gap-2">{children}</div>
+      <div className="flex max-h-[560px] min-h-12 flex-col gap-2 overflow-y-auto p-0.5">{children}</div>
     </div>
   );
 }

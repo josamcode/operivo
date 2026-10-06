@@ -84,7 +84,10 @@ export const codexProvider: ProviderAdapter = {
   id: 'codex',
   label: 'Codex',
   efforts: ['low', 'medium', 'high', 'xhigh'],
-  models: [{ id: 'default', label: 'Default (from Codex config)' }],
+  models: [
+    { id: 'default', label: 'Default (from Codex config)' },
+    { id: 'gpt-5.5', label: 'GPT-5.5' },
+  ],
 
   async detect() {
     try {

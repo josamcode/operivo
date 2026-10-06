@@ -4,18 +4,38 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { isRtl } from '@/lib/format';
-import { useDecision, useResolveDecision } from '@/lib/queries';
+import { useBootstrap, useDecision, useResolveDecision } from '@/lib/queries';
 import { cn } from '@/lib/utils';
 import { pageIcon } from '../app/page-icon';
 import { AgentAvatar, AutoDir, Chip } from '../app/primitives';
 
-const KIND_LABEL: Record<string, string> = {
-  main: 'Main focus',
-  supporting: 'Supporting',
-  continuous: 'Continuous',
-  goal: 'Goal',
-  idea: 'Idea',
-  experiment: 'Experiment',
+const COPY = {
+  en: {
+    kinds: { main: 'Main focus', supporting: 'Supporting', continuous: 'Continuous', goal: 'Goal', idea: 'Idea', experiment: 'Experiment' } as Record<string, string>,
+    starts: 'Starts working on',
+    today: 'Your part today',
+    confirm: 'Confirm and start',
+    adjust: 'Adjust',
+    what: 'What should change?',
+    send: 'Send to Noor',
+    cancel: 'Cancel',
+    confirmed: 'Confirmed',
+    replaced: 'Replaced by a newer plan',
+    sentBack: 'Sent back for changes',
+  },
+  ar: {
+    kinds: { main: 'الأولوية', supporting: 'داعم', continuous: 'مستمر', goal: 'هدف', idea: 'فكرة', experiment: 'تجربة' } as Record<string, string>,
+    starts: 'هيبدأوا شغل على',
+    today: 'المطلوب منك النهارده',
+    confirm: 'تمام، ابدأ',
+    adjust: 'عدّل',
+    what: 'عايز تغير إيه؟',
+    send: 'ابعت لنور',
+    cancel: 'إلغاء',
+    confirmed: 'اتأكد',
+    replaced: 'اتبدلت بخطة أحدث',
+    sentBack: 'رجعت للتعديل',
+  },
 };
 
 /** Noor's proposed structure. Nothing is created until the founder confirms. */
@@ -27,6 +47,8 @@ export function PlanCard({ decisionId }: { decisionId: string }) {
 
 function PlanCardBody({ d }: { d: DecisionDTO }) {
   const plan = d.payload as PlanProposal;
+  const { data: boot } = useBootstrap();
+  const t = COPY[boot?.founder?.language === 'ar' ? 'ar' : 'en'];
   const resolve = useResolveDecision();
   const [adjusting, setAdjusting] = useState(false);
   const [note, setNote] = useState('');
@@ -47,7 +69,7 @@ function PlanCardBody({ d }: { d: DecisionDTO }) {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-1.5">
                     <AutoDir text={f.name} className="text-[13.5px] font-medium" />
-                    <Chip tone={f.kind === 'main' ? 'info' : 'neutral'}>{KIND_LABEL[f.kind] ?? f.kind}</Chip>
+                    <Chip tone={f.kind === 'main' ? 'info' : 'neutral'}>{t.kinds[f.kind] ?? f.kind}</Chip>
                   </div>
                   <AutoDir as="p" text={f.why} className="mt-0.5 text-[12.5px] leading-snug text-ink-2" />
                 </div>
@@ -58,7 +80,7 @@ function PlanCardBody({ d }: { d: DecisionDTO }) {
 
         {plan.agents && plan.agents.length > 0 && (
           <div className="border-t border-border pt-3">
-            <p className="mb-2 text-[12px] font-medium text-ink-3">Starts working on</p>
+            <p className="mb-2 text-[12px] font-medium text-ink-3">{t.starts}</p>
             <div className="space-y-1.5">
               {plan.agents.map((a) => (
                 <div key={a.name} className="flex items-start gap-2.5 text-[12.5px]">
@@ -77,7 +99,7 @@ function PlanCardBody({ d }: { d: DecisionDTO }) {
 
         {plan.today && plan.today.length > 0 && (
           <div className="border-t border-border pt-3">
-            <p className="mb-1.5 text-[12px] font-medium text-ink-3">Your part today</p>
+            <p className="mb-1.5 text-[12px] font-medium text-ink-3">{t.today}</p>
             <ul className="space-y-1">
               {plan.today.map((t) => (
                 <li key={t.title} className="flex items-center gap-2 text-[12.5px]">
@@ -90,17 +112,17 @@ function PlanCardBody({ d }: { d: DecisionDTO }) {
         )}
       </div>
 
-      <div className="flex items-center gap-2 border-t border-border bg-surface-2 px-4 py-2.5">
+      <div className="flex items-center gap-2 border-t border-border bg-surface-2 px-4 py-2.5" dir={rtl ? 'rtl' : undefined}>
         {open ? (
           adjusting ? (
             <div className="flex w-full flex-col gap-2">
-              <Textarea autoFocus value={note} onChange={(e) => setNote(e.target.value)} placeholder="What should change?" className="min-h-16 bg-surface text-[13px]" dir="auto" />
+              <Textarea autoFocus value={note} onChange={(e) => setNote(e.target.value)} placeholder={t.what} className="min-h-16 bg-surface text-[13px]" dir="auto" />
               <div className="flex justify-end gap-2">
                 <Button size="sm" variant="ghost" onClick={() => setAdjusting(false)}>
-                  Cancel
+                  {t.cancel}
                 </Button>
                 <Button size="sm" disabled={!note.trim() || resolve.isPending} onClick={() => resolve.mutate({ id: d.id, choice: 'adjust', note })}>
-                  Send to Noor
+                  {t.send}
                 </Button>
               </div>
             </div>
@@ -108,10 +130,10 @@ function PlanCardBody({ d }: { d: DecisionDTO }) {
             <>
               <Button size="sm" disabled={resolve.isPending} onClick={() => resolve.mutate({ id: d.id, choice: 'confirm' })}>
                 {resolve.isPending ? <Loader2 className="animate-spin" /> : <Check />}
-                Confirm and start
+                {t.confirm}
               </Button>
               <Button size="sm" variant="ghost" onClick={() => setAdjusting(true)}>
-                Adjust
+                {t.adjust}
               </Button>
             </>
           )
@@ -119,12 +141,12 @@ function PlanCardBody({ d }: { d: DecisionDTO }) {
           <span className="flex items-center gap-1.5 text-[12.5px] text-ink-2">
             {d.choice === 'confirm' ? (
               <>
-                <Check className="size-3.5 text-positive" /> Confirmed
+                <Check className="size-3.5 text-positive" /> {t.confirmed}
               </>
             ) : d.status === 'dismissed' ? (
-              'Replaced by a newer plan'
+              t.replaced
             ) : (
-              'Sent back for changes'
+              t.sentBack
             )}
           </span>
         )}
