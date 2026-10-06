@@ -1,8 +1,10 @@
 import type { MessageDTO, MessageRef } from '@opervio/contracts';
 import { Link } from '@tanstack/react-router';
 import { ArrowUp, Check, FileText, Square, X } from 'lucide-react';
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, type CSSProperties, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
+import { ResizeHandle } from '@/components/ui/resize-handle';
+import { useResizableWidth } from '@/hooks/use-resizable-width';
 import { api } from '@/lib/api';
 import { isRtl } from '@/lib/format';
 import { useDecision, useMessages, useSendToNoor } from '@/lib/queries';
@@ -198,12 +200,13 @@ export function NoorThread() {
   );
 }
 
-export function NoorPanel({ className }: { className?: string }) {
+export function NoorPanel({ className, style, children }: { className?: string; style?: CSSProperties; children?: ReactNode }) {
   const { setNoorOpen } = useUi();
   const { data: messages = [] } = useMessages();
   const live = messages.some((m) => m.status === 'streaming');
   return (
-    <aside className={cn('flex h-full w-[400px] shrink-0 flex-col border-s border-border bg-surface', className)} aria-label="Noor">
+    <aside className={cn('relative flex h-full w-[400px] shrink-0 flex-col border-s border-border bg-surface', className)} style={style} aria-label="Noor">
+      {children}
       <header className="flex h-12 items-center gap-2.5 border-b border-border px-4">
         <NoorMark size={20} live={live} />
         <div className="leading-tight">
@@ -216,5 +219,15 @@ export function NoorPanel({ className }: { className?: string }) {
       </header>
       <NoorThread />
     </aside>
+  );
+}
+
+/** Docked beside the page on wide screens; drag its left edge to resize. Always leaves the sidebar plus a usable page. */
+export function DockedNoorPanel() {
+  const size = useResizableWidth({ id: 'noor', defaultWidth: 400, minWidth: 340, maxWidth: 820, reserve: 240 + 560 });
+  return (
+    <NoorPanel style={{ width: size.width }} className={cn(size.dragging && 'select-none')}>
+      <ResizeHandle side="right" size={size} />
+    </NoorPanel>
   );
 }

@@ -6,17 +6,19 @@ export interface ResizableOptions {
   defaultWidth: number;
   minWidth?: number;
   maxWidth?: number;
+  /** Pixels of the window that must stay free next to the panel (default: a narrow strip). */
+  reserve?: number;
 }
 
 const KEY = (id: string) => `opervio-width:${id}`;
-/** Always leave a strip of the app visible next to the drawer. */
+/** By default, always leave a strip of the app visible next to the panel. */
 const VIEWPORT_GUTTER = 96;
 
 /** A width the user can drag, clamped to sensible bounds and remembered across sessions. */
-export function useResizableWidth({ id, defaultWidth, minWidth = 380, maxWidth = 1600 }: ResizableOptions) {
+export function useResizableWidth({ id, defaultWidth, minWidth = 380, maxWidth = 1600, reserve = VIEWPORT_GUTTER }: ResizableOptions) {
   const clamp = useCallback(
-    (w: number) => Math.round(Math.max(minWidth, Math.min(w, maxWidth, window.innerWidth - VIEWPORT_GUTTER))),
-    [minWidth, maxWidth],
+    (w: number) => Math.round(Math.max(minWidth, Math.min(w, maxWidth, window.innerWidth - reserve))),
+    [minWidth, maxWidth, reserve],
   );
   const [width, setWidthState] = useState(() => {
     try {

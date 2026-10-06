@@ -10,7 +10,7 @@ import { onNotification } from '@/lib/live';
 import { useBootstrap, useMessages, useNotifications } from '@/lib/queries';
 import { cn } from '@/lib/utils';
 import { AgentDrawer } from '../agents/agent-drawer';
-import { NoorPanel } from '../noor/noor-panel';
+import { DockedNoorPanel, NoorPanel } from '../noor/noor-panel';
 import { OutputDrawer } from '../outputs/output-drawer';
 import { CommandPalette } from './command-palette';
 import { DecisionDialog } from './decision-dialog';
@@ -100,10 +100,10 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Sidebar className="hidden lg:flex" />
       <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">{children}</main>
       {wide ? (
-        noorOpen && <NoorPanel />
+        noorOpen && <DockedNoorPanel />
       ) : (
         <Sheet open={noorOpen} onOpenChange={setNoorOpen}>
-          <SheetContent side="right" className="w-full p-0 sm:max-w-[420px]" showCloseButton={false}>
+          <SheetContent side="right" resizable={{ id: 'noor-sheet', defaultWidth: 420, minWidth: 340 }} className="w-full p-0 sm:max-w-[420px]" showCloseButton={false}>
             <SheetTitle className="sr-only">Noor</SheetTitle>
             <NoorPanel className={cn('w-full border-0')} />
           </SheetContent>
