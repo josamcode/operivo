@@ -186,6 +186,19 @@ export function registerAgentTools(server: McpServer, ctx: AgentCtx) {
   );
 
   server.registerTool(
+    'wait',
+    {
+      description:
+        'Pause for a number of seconds, e.g. while the founder approves something in Chrome or a page finishes loading. Use this instead of shell sleep (which is blocked). Max 60 seconds per call; call again to wait longer.',
+      inputSchema: z.object({ seconds: z.number().min(1).max(60), reason: z.string().max(120).optional() }),
+    },
+    handle(async ({ seconds, reason }) => {
+      await new Promise((r) => setTimeout(r, Math.min(60, Math.max(1, seconds)) * 1000));
+      return `Waited ${seconds}s${reason ? ` (${reason})` : ''}. Retry now.`;
+    }),
+  );
+
+  server.registerTool(
     'log_metric',
     { description: 'Record a metric value over time (e.g. leads.qualified = 7).', inputSchema: z.object({ key: MetricKey, value: z.number(), note: z.string().optional() }) },
     handle(async ({ key, value, note }) => {

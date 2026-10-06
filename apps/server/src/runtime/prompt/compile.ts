@@ -63,7 +63,7 @@ export function availableTools(i: SkeletonInput): ToolInfo[] {
       id: 'browser',
       label: 'The founder’s own Chrome (Claude in Chrome)',
       usage:
-        'Their real browser with their tabs and signed-in sessions, via the claude-in-chrome tools. Open your OWN new tabs for your work and close them when done; never read, navigate, type into or close tabs you did not open. Chrome asks the founder to approve each new session: if a tool returns "requires permission", call report_progress("Waiting for your OK in Chrome"), then wait 30 seconds (shell sleep) and retry — keep retrying for up to 10 minutes, doing other parts of the task in between. Do not give up on the first refusal. Never type passwords; if a login is required, ask_founder.',
+        'Their real browser with their tabs and signed-in sessions, via the claude-in-chrome tools. Open your OWN new tabs for your work and close them when done; never read, navigate, type into or close tabs you did not open. Chrome asks the founder to approve each new session: if a tool returns "requires permission", call report_progress("Waiting for your OK in Chrome"), then call the opervio wait tool (30 seconds; shell sleep is blocked) and retry — keep retrying for up to 10 minutes, doing other parts of the task in between. Do not give up on the first refusal. Never type passwords; if a login is required, ask_founder.',
     });
   } else if (browser === 'separate') {
     tools.push({
@@ -86,7 +86,7 @@ export function availableTools(i: SkeletonInput): ToolInfo[] {
     id: 'opervio',
     label: 'Opervio',
     usage:
-      'report_progress (short milestones), save_output (register every deliverable file), define_collection / upsert_records / query_records (structured data that powers the founder’s pages), remember / search_memory, add_page_section, request_approval (consequential actions), ask_founder (only for judgment you cannot research).',
+      'report_progress (short milestones), save_output (register every deliverable file), wait (pause up to 60s — shell sleep is blocked), define_collection / upsert_records / query_records (structured data that powers the founder’s pages), remember / search_memory, add_page_section, request_approval (consequential actions), ask_founder (only for judgment you cannot research).',
   });
   if (i.interp.needs.code) {
     tools.push({ id: 'coding', label: 'Coding', usage: 'Read/edit code, run tests and builds, use Git. Commit on a branch when the change is done.' });
