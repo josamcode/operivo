@@ -64,7 +64,15 @@ export const AiSettings = z.object({
 });
 export type AiSettings = z.infer<typeof AiSettings>;
 
+/**
+ * your-chrome: agents work in the founder's own Chrome (their tabs and sign-ins) through the
+ * Claude in Chrome extension. separate: an isolated Playwright window (opt-in).
+ */
+export const BrowserMode = z.enum(['your-chrome', 'separate']);
+export type BrowserMode = z.infer<typeof BrowserMode>;
+
 export const ToolSettings = z.object({
+  browserMode: BrowserMode,
   browserChannel: z.enum(['chrome', 'msedge', 'chromium']),
   browserHeadless: z.boolean(),
   workspaceDir: z.string().max(400),

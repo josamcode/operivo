@@ -24,6 +24,8 @@ export interface ProviderRunOptions {
   /** Claude-only: settings file that installs the PreToolUse policy hook. */
   hookSettingsPath?: string;
   addDirs?: string[];
+  /** Claude-only: drive the founder's own Chrome via the Claude in Chrome extension. */
+  browser?: 'your-chrome';
   /** Codex sandbox; Claude is gated by the policy hook instead. */
   sandbox?: 'read-only' | 'workspace-write' | 'full';
   timeoutMs?: number;

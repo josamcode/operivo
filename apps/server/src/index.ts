@@ -11,7 +11,7 @@ import { installHooks } from './tools/hook';
 import { ensurePython, pythonStatus } from './tools/python';
 
 async function main() {
-  for (const dir of Object.values(config.paths)) if (!dir.endsWith('.json')) await fs.ensureDir(dir);
+  for (const dir of Object.values(config.paths)) await fs.ensureDir(dir);
   await fs.ensureDir(`${config.paths.runtime}/scratch`);
   await installHooks();
   await db.$connect();

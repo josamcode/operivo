@@ -30,7 +30,9 @@ export function claudeArgs(
   // Agents never block on permission prompts; safety comes from the PreToolUse policy hook.
   args.push('--permission-mode', 'bypassPermissions');
   // Isolate from the founder's global Claude Code customizations; project settings still apply.
-  args.push('--setting-sources', 'project,local', '--no-chrome');
+  args.push('--setting-sources', 'project,local');
+  // The founder's own Chrome (tabs + sign-ins) through the Claude in Chrome extension — no new profile.
+  args.push(opts.browser === 'your-chrome' ? '--chrome' : '--no-chrome');
   args.push('--strict-mcp-config');
   if (files.mcpConfig) args.push('--mcp-config', files.mcpConfig);
   if (opts.builtinTools === 'none') args.push('--tools', '');

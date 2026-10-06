@@ -3,9 +3,8 @@ import { db } from '../../db';
 import type { Agent, Focus, Founder, Task } from '../../generated/prisma/client';
 import { log } from '../../log';
 import { getAiSettings } from '../../settings';
-import { signedIn } from '../../tools/browser';
 import { venvPython } from '../../tools/python';
-import { compileSkeleton, operatingRules, renderPrompt } from './compile';
+import { compileSkeleton, operatingRules, renderPrompt, type BrowserAccess } from './compile';
 import { retrieveContext } from './context';
 import { engineerPrompt, mergeEngineered } from './engineer';
 import { interpretTask, type Interpretation } from './interpret';
@@ -18,6 +17,7 @@ export interface CompileInput {
   workdir: string;
   provider: ProviderId;
   attempt: number;
+  browser: BrowserAccess;
 }
 
 /**
@@ -46,7 +46,7 @@ export async function compilePrompt(input: CompileInput): Promise<{ prompt: Comp
     provider: input.provider,
     workdir: input.workdir,
     pythonPath: venvPython(),
-    browserSignedIn: signedIn(),
+    browser: input.browser,
     collections,
   });
   let engineerNote: string | undefined;

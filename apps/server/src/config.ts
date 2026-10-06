@@ -19,8 +19,6 @@ export const config = {
     home,
     workspace: join(home, 'workspace'),
     runtime: join(home, 'runtime'),
-    browserProfile: join(home, 'browser', 'profile'),
-    storageState: join(home, 'browser', 'storage-state.json'),
     pythonVenv: join(home, 'python', '.venv'),
   },
 };

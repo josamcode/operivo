@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { ALWAYS_ASK_OPTIONS, Autonomy, CommStyle, EFFORT_LABEL, Language, type AiSettings, type RoleDefaults, type SettingsDTO, type ToolSettings } from '@opervio/contracts';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearch } from '@tanstack/react-router';
-import { Check, Globe, Loader2, RefreshCw, Trash2, TriangleAlert } from 'lucide-react';
+import { Check, Loader2, RefreshCw, Trash2, TriangleAlert } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -264,37 +264,52 @@ function Tools({ s }: { s: SettingsDTO }) {
   const py = s.toolStatus.python;
   return (
     <div>
-      <Row label="Browser" hint="Agents use a visible browser you can watch. Each agent gets its own window with your signed-in sessions.">
+      <Row label="Browser" hint="Where agents browse the web for you.">
         <div className="space-y-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <SimpleSelect
-              value={tools.browserChannel}
-              onChange={(v) => void save({ ...tools, browserChannel: v as ToolSettings['browserChannel'] })}
-              options={[
-                { value: 'chrome', label: 'Google Chrome' },
-                { value: 'msedge', label: 'Microsoft Edge' },
-                { value: 'chromium', label: 'Chromium' },
-              ]}
-            />
-            <label className="flex items-center gap-2 text-[13px]">
-              <Switch checked={!tools.browserHeadless} onCheckedChange={(v) => void save({ ...tools, browserHeadless: !v })} />
-              Show the browser while agents work
-            </label>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {(
+              [
+                { id: 'your-chrome', title: 'Your Chrome', body: 'Agents work in the Chrome you already use — your tabs and sign-ins — through the Claude in Chrome extension. They open their own tabs and leave yours alone.' },
+                { id: 'separate', title: 'Separate window', body: 'Agents use their own isolated browser window, without access to your tabs or sessions.' },
+              ] as const
+            ).map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => void save({ ...tools, browserMode: m.id })}
+                className={cn('rounded-lg border p-3 text-start transition-colors', tools.browserMode === m.id ? 'border-foreground bg-surface' : 'border-border bg-surface-2 hover:border-border-strong')}
+              >
+                <span className="flex items-center gap-2 text-[13px] font-medium">
+                  <span className={cn('grid size-3.5 place-items-center rounded-full border', tools.browserMode === m.id ? 'border-brand' : 'border-border-strong')}>
+                    {tools.browserMode === m.id && <span className="size-1.5 rounded-full bg-brand" />}
+                  </span>
+                  {m.title}
+                </span>
+                <span className="mt-1 block text-[12px] text-ink-3">{m.body}</span>
+              </button>
+            ))}
           </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={s.toolStatus.browser.signInOpen}
-              onClick={async () => {
-                await api.post('/api/tools/browser/signin', {});
-                toast('Sign in to the sites you want your team to use, then close the window.');
-              }}
-            >
-              <Globe /> {s.toolStatus.browser.signInOpen ? 'Browser open…' : 'Sign in to sites'}
-            </Button>
-            <span className="text-[12.5px] text-ink-3">{s.toolStatus.browser.signedIn ? 'Signed-in sessions saved for agents.' : 'No sessions saved yet. Your passwords stay in the browser.'}</span>
-          </div>
+          {tools.browserMode === 'your-chrome' ? (
+            <p className="text-[12.5px] text-ink-3">
+              Keep Chrome open with the Claude in Chrome extension signed in. The first time an agent acts on a site, Chrome asks you to approve it — Opervio notifies you when an agent is waiting. Browser tasks run on Claude, since Codex can’t drive your Chrome.
+            </p>
+          ) : (
+            <div className="flex flex-wrap items-center gap-3">
+              <SimpleSelect
+                value={tools.browserChannel}
+                onChange={(v) => void save({ ...tools, browserChannel: v as ToolSettings['browserChannel'] })}
+                options={[
+                  { value: 'chrome', label: 'Google Chrome' },
+                  { value: 'msedge', label: 'Microsoft Edge' },
+                  { value: 'chromium', label: 'Chromium' },
+                ]}
+              />
+              <label className="flex items-center gap-2 text-[13px]">
+                <Switch checked={!tools.browserHeadless} onCheckedChange={(v) => void save({ ...tools, browserHeadless: !v })} />
+                Show the window while agents work
+              </label>
+            </div>
+          )}
         </div>
       </Row>
       <Row label="Python" hint="An isolated environment agents use for data, spreadsheets, documents and charts.">

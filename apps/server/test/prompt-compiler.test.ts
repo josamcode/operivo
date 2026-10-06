@@ -23,7 +23,6 @@ const input = (over: Partial<SkeletonInput> = {}): SkeletonInput => ({
   provider: 'claude',
   workdir: 'C:/Opervio/workspace/clients/find-leads',
   pythonPath: 'C:/Opervio/python/.venv/Scripts/python.exe',
-  browserSignedIn: false,
   ...over,
 });
 
@@ -67,6 +66,13 @@ describe('Prompt Compiler output contract', () => {
     expect(c).not.toMatch(/publishing anything/);
     expect(c).toMatch(/stale knowledge/);
     expect(c).toMatch(/Egyptian Arabic/);
+  });
+
+  it('describes the founder’s own Chrome, and leaves the browser out when the provider cannot drive it', () => {
+    const own = compileSkeleton(input({ browser: 'your-chrome' })).tools.find((t) => t.id === 'browser');
+    expect(own?.label).toMatch(/own Chrome/);
+    expect(own?.usage).toMatch(/never read, navigate, type into or close tabs you did not open/);
+    expect(compileSkeleton(input({ browser: 'none' })).tools.some((t) => t.id === 'browser')).toBe(false);
   });
 
   it('ties the agent to the collections its focus page displays, so results update the page', () => {

@@ -1,6 +1,9 @@
 import type { CompiledPrompt, ContextItem, ProviderId, ToolInfo } from '@opervio/contracts';
 import type { Interpretation } from './interpret';
 
+/** How this run can use a browser: the founder's own Chrome, an isolated window, or none. */
+export type BrowserAccess = 'your-chrome' | 'separate' | 'none';
+
 export interface SkeletonInput {
   task: { title: string; objective: string; deliverable: string; successCriteria: string[] };
   agent: { name: string; role: string };
@@ -11,7 +14,7 @@ export interface SkeletonInput {
   provider: ProviderId;
   workdir: string;
   pythonPath: string;
-  browserSignedIn: boolean;
+  browser?: BrowserAccess;
   /** Collections the focus page displays — results recorded there update the founder's page live. */
   collections?: { key: string; title: string; fields: string[] }[];
 }
@@ -54,13 +57,21 @@ const APPROACH: Record<string, string[]> = {
 export function availableTools(i: SkeletonInput): ToolInfo[] {
   const tools: ToolInfo[] = [];
   if (i.interp.needs.web) tools.push({ id: 'web', label: 'Web search & fetch', usage: 'Search the web and read pages for research.' });
-  tools.push({
-    id: 'browser',
-    label: 'Browser (Playwright, visible Chrome)',
-    usage: `Navigate, read, click, fill forms, download/upload, screenshots, save pages as PDF via the playwright tools. ${
-      i.browserSignedIn ? 'The founder’s signed-in sessions are loaded.' : 'No signed-in sessions yet — if a site needs login, ask_founder to sign in via Opervio Settings → Browser.'
-    } Never type passwords.`,
-  });
+  const browser = i.browser ?? 'separate';
+  if (browser === 'your-chrome') {
+    tools.push({
+      id: 'browser',
+      label: 'The founder’s own Chrome (Claude in Chrome)',
+      usage:
+        'Their real browser with their tabs and signed-in sessions, via the claude-in-chrome tools. Open your OWN new tabs for your work and close them when done; never read, navigate, type into or close tabs you did not open. The first time you act on a site, Chrome may ask the founder to approve — if a tool reports it needs permission, wait briefly and retry, and keep working on other parts meanwhile. Never type passwords; if a login is required, ask_founder.',
+    });
+  } else if (browser === 'separate') {
+    tools.push({
+      id: 'browser',
+      label: 'Browser (separate window)',
+      usage: 'An isolated browser window (no access to the founder’s tabs or sessions): navigate, read, click, fill forms, download/upload, screenshots, save pages as PDF via the playwright tools. If a site needs login, ask_founder. Never type passwords.',
+    });
+  }
   tools.push({
     id: 'files',
     label: 'Files & terminal',

@@ -10,6 +10,7 @@ const detectChannel = (): ToolSettings['browserChannel'] => {
 };
 
 export const defaultToolSettings = (): ToolSettings => ({
+  browserMode: 'your-chrome',
   browserChannel: detectChannel(),
   browserHeadless: false,
   workspaceDir: config.paths.workspace,

@@ -21,6 +21,23 @@ export function describeTool(name: string, input: unknown): string {
     if (str(i.url)) return `Browsing ${host(str(i.url))}`;
     return `Browser · ${action}`;
   }
+  if (name.startsWith('mcp__claude-in-chrome__')) {
+    const action = name.replace('mcp__claude-in-chrome__', '');
+    if (str(i.url)) return `Browsing ${host(str(i.url))}`;
+    const labels: Record<string, string> = {
+      tabs_create_mcp: 'Opening a tab in your Chrome',
+      tabs_close_mcp: 'Closing its tab',
+      get_page_text: 'Reading the page',
+      read_page: 'Reading the page',
+      find: str(i.query) ? `Looking for “${clip(str(i.query), 40)}”` : 'Looking at the page',
+      form_input: 'Filling a form',
+      computer: 'Working in your Chrome',
+      browser_batch: 'Working in your Chrome',
+      file_upload: 'Uploading a file',
+      javascript_tool: 'Inspecting the page',
+    };
+    return labels[action] ?? '';
+  }
   if (name.startsWith('mcp__opervio__')) return '';
   switch (name) {
     case 'WebSearch':
@@ -66,7 +83,7 @@ export function describeTool(name: string, input: unknown): string {
 /** Groups tool names into the families shown on agent cards (Browser, Python, Terminal…). */
 export function toolFamily(name: string, input?: unknown): string | null {
   const cmd = String(((input ?? {}) as Record<string, unknown>).command ?? '');
-  if (name.startsWith('mcp__playwright__')) return 'Browser';
+  if (name.startsWith('mcp__playwright__') || name.startsWith('mcp__claude-in-chrome__')) return 'Browser';
   if (name === 'WebSearch' || name === 'WebFetch') return 'Web';
   if (name === 'mcp__opervio__run_python' || /\bpython|\.venv/.test(cmd)) return 'Python';
   if (/\bgit\b/.test(cmd)) return 'Git';

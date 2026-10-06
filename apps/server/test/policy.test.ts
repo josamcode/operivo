@@ -97,3 +97,14 @@ describe('redaction', () => {
     expect(out).toContain('Found 14 prospects');
   });
 });
+
+describe('activity labels', () => {
+  it('turns Chrome actions into short human labels', async () => {
+    const { describeTool, toolFamily } = await import('../src/lib/text');
+    expect(describeTool('mcp__claude-in-chrome__navigate', { url: 'https://www.linkedin.com/jobs' })).toBe('Browsing linkedin.com');
+    expect(describeTool('mcp__claude-in-chrome__tabs_create_mcp', {})).toBe('Opening a tab in your Chrome');
+    expect(describeTool('Write', { file_path: String.raw`C:\work\leads.xlsx` })).toBe('Writing leads.xlsx');
+    expect(describeTool('ToolSearch', {})).toBe('');
+    expect(toolFamily('mcp__claude-in-chrome__computer')).toBe('Browser');
+  });
+});

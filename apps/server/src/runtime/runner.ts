@@ -16,13 +16,14 @@ import { describeTool, toolFamily, clip } from '../lib/text';
 import { log } from '../log';
 import { issueToken, mcpUrl, policyUrl, revokeToken } from '../mcp/tokens';
 import { pickProvider } from '../providers/registry';
-import type { ProviderEvent } from '../providers/types';
-import { getAiSettings } from '../settings';
+import type { McpServerSpec, ProviderEvent } from '../providers/types';
+import { getAiSettings, getToolSettings } from '../settings';
 import { playwrightMcpServer } from '../tools/browser';
 import { hookPaths } from '../tools/hook';
 import { runEvent, runState, stateFor } from './events';
 import { judgeResult } from './judge';
 import { compilePrompt } from './prompt';
+import type { BrowserAccess } from './prompt/compile';
 import { interpretTask } from './prompt/interpret';
 import { cancelMode, enqueueTask } from './queue';
 
@@ -63,11 +64,17 @@ export async function runTask(taskId: string, signal: AbortSignal) {
   const ai = await getAiSettings();
   const role = task.taskType === 'coding' ? ai.coding : ai.specialist;
 
-  const provider = await pickProvider((agent.provider !== 'auto' ? agent.provider : role.provider) as 'claude' | 'codex' | 'auto', task.taskType as never);
+  const interp = interpretTask(task);
+  const toolSettings = await getToolSettings();
+  const yourChrome = toolSettings.browserMode === 'your-chrome';
+  const provider = await pickProvider((agent.provider !== 'auto' ? agent.provider : role.provider) as 'claude' | 'codex' | 'auto', task.taskType as never, {
+    needsYourChrome: yourChrome && interp.needs.browser,
+  });
+  // Browser access for this run: the founder's own Chrome (Claude only), or an opt-in separate window.
+  const browser: BrowserAccess = yourChrome ? (provider.id === 'claude' ? 'your-chrome' : 'none') : 'separate';
   let model = agent.model !== 'default' ? agent.model : role.provider === provider.id ? role.model : 'default';
   const previousRuns = await db.run.findMany({ where: { taskId }, orderBy: { startedAt: 'desc' } });
   const failures = previousRuns.filter((r) => ['incomplete', 'failed'].includes((r.verdict as JudgeVerdict | null)?.status ?? '')).length;
-  const interp = interpretTask(task);
   const requested = agent.effort !== 'auto' ? agent.effort : task.effort !== 'auto' ? task.effort : role.effort;
   const effort = resolveEffort(requested as never, { taskType: interp.taskType, complexity: interp.complexity, previousFailures: failures }, provider.efforts);
   const attempt = previousRuns.length + 1;
@@ -89,7 +96,7 @@ export async function runTask(taskId: string, signal: AbortSignal) {
   if (resume && prev?.prompt) {
     compiled = prev.prompt as unknown as CompiledPrompt;
   } else {
-    compiled = (await compilePrompt({ task, agent, focus: task.focus, founder, workdir, provider: provider.id, attempt })).prompt;
+    compiled = (await compilePrompt({ task, agent, focus: task.focus, founder, workdir, provider: provider.id, attempt, browser })).prompt;
     if (followUp) compiled = { ...compiled, text: `${compiled.text}\n\n## Note from the previous attempt\n${followUp}` };
   }
   const promptText = resume ? followUpMessage(followUp!) : compiled.text;
@@ -98,7 +105,8 @@ export async function runTask(taskId: string, signal: AbortSignal) {
   await db.task.update({ where: { id: taskId }, data: { followUp: null } });
 
   const token = issueToken({ role: 'agent', runId: run.id, taskId, agentId: agent.id, focusId: task.focusId, workdir });
-  const servers = [{ name: 'opervio', type: 'http' as const, url: mcpUrl(token) }, await playwrightMcpServer(workdir)];
+  const servers: McpServerSpec[] = [{ name: 'opervio', type: 'http', url: mcpUrl(token) }];
+  if (browser === 'separate') servers.push(await playwrightMcpServer(workdir));
   const startHead = interp.needs.code ? await gitHead(workdir) : null;
   const startedAt = new Date();
 
@@ -118,6 +126,24 @@ export async function runTask(taskId: string, signal: AbortSignal) {
   let sessionId: string | null = null;
   const tools = new Set<string>();
   let lastLabel = '';
+  const toolNames = new Map<string, string>();
+  let chromeNoticeSent = false;
+  /** Claude in Chrome asks the founder before acting on a site — make that visible instead of a silent stall. */
+  const chromeNotice = async (output: string) => {
+    if (chromeNoticeSent) return;
+    const notConnected = /not connected|no (browser|chrome)|extension (is )?not|couldn.t connect|unable to connect/i.test(output);
+    const needsOk = /permission|approve|not allowed|denied by user|grant/i.test(output);
+    if (!notConnected && !needsOk) return;
+    chromeNoticeSent = true;
+    const label = notConnected ? 'Chrome isn’t connected — open Chrome with the Claude extension' : 'Waiting for your OK in Chrome';
+    await ev('note', label);
+    await notify(
+      'action',
+      notConnected ? `${agent.name} can’t reach your Chrome` : `${agent.name} needs your OK in Chrome`,
+      notConnected ? 'Open Chrome (with the Claude in Chrome extension signed in) so the agent can use your browser.' : 'Approve the Claude in Chrome prompt in your browser so the work can continue.',
+      `?agent=${agent.id}`,
+    );
+  };
 
   const execute = async (useModel: string) => {
     result = null;
@@ -128,6 +154,7 @@ export async function runTask(taskId: string, signal: AbortSignal) {
       effort,
       cwd: workdir,
       mcpServers: servers,
+      browser: browser === 'your-chrome' ? 'your-chrome' : undefined,
       builtinTools: 'default',
       resumeSessionId: resume,
       hookSettingsPath: hookPaths().settings,
@@ -144,7 +171,10 @@ export async function runTask(taskId: string, signal: AbortSignal) {
         sessionId = e.sessionId;
         if (e.model) await db.run.update({ where: { id: run.id }, data: { model: e.model, sessionId: e.sessionId } });
         else await db.run.update({ where: { id: run.id }, data: { sessionId: e.sessionId } });
+      } else if (e.type === 'tool-result') {
+        if (e.id && toolNames.get(e.id)?.startsWith('mcp__claude-in-chrome__') && (e.isError || /permission|approve|connect/i.test(e.output))) await chromeNotice(e.output);
       } else if (e.type === 'tool') {
+        if (e.id) toolNames.set(e.id, e.name);
         const family = toolFamily(e.name, e.input);
         if (family && !tools.has(family)) {
           tools.add(family);

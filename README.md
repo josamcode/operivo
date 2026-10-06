@@ -4,6 +4,8 @@ A quiet operating environment around powerful AI agents. You talk to **Noor**; s
 
 **Thin Opervio, powerful agents.** Opervio supplies context, memory, tools, UI, files, safety and persistence. Claude Code and Codex do the reasoning.
 
+**Browser:** by default agents work in *your own Chrome* — your tabs and sign-ins — through the Claude in Chrome extension. They open their own tabs and leave yours alone. The first time an agent acts on a site, Chrome asks you to approve; Opervio notifies you when an agent is waiting. (An isolated Playwright window is available as an opt-in in Settings → Tools.)
+
 ## Run it
 
 Prerequisites: Node 22+, pnpm, Docker, and at least one AI CLI you are signed in to — [Claude Code](https://docs.claude.com/claude-code) and/or Codex. Python 3 is optional (agents get an isolated environment automatically).
@@ -19,7 +21,7 @@ On Windows, `scripts\start.ps1` does all of the above and leaves Opervio running
 
 Development: `pnpm dev` (API on :4100 with reload, Vite on :5173).
 
-Your files live in `~/Opervio` (`workspace/` for agent work, `outputs/`, `browser/` for your signed-in sessions, `python/.venv`). Override with `OPERVIO_HOME`.
+Your files live in `~/Opervio` (`workspace/` for agent work, `outputs/`, `python/.venv`, `logs/`). Override with `OPERVIO_HOME`.
 
 ## How it works
 
@@ -35,7 +37,7 @@ Founder ──► Noor (Claude Code / Codex, Opervio MCP tools)
               │                     Deliverables · Success criteria · Constraints · Stop conditions
               ├─ Prompt Engineer    low-effort AI pass that sharpens (never solves) the task
               ▼
-         Specialist run  (Claude Code / Codex + Opervio MCP + Playwright MCP browser + Python)
+         Specialist run  (Claude Code / Codex + Opervio MCP + your Chrome via Claude in Chrome + Python)
               │  live activity, files, records ──► SSE ──► UI
               ▼
          Result Judge  (file checks + low-effort AI verdict) ─► complete / incomplete → focused
@@ -46,14 +48,14 @@ Founder ──► Noor (Claude Code / Codex, Opervio MCP tools)
 | Path | What lives there |
 |---|---|
 | `packages/contracts` | Zod contracts shared by server and UI: the UI component registry and page grammar, typed record collections, plan proposals, compiled prompts, judge verdicts, effort |
-| `apps/server` | Fastify + Prisma 7 + Pino. Provider adapters (`providers/`), runtime (`runtime/`: queue, runner, prompt compiler, judge, scheduler), Opervio MCP server (`mcp/`), Noor (`noor/`), tools (`tools/`: policy hook, Playwright browser, Python) |
+| `apps/server` | Fastify + Prisma 7 + Pino. Provider adapters (`providers/`), runtime (`runtime/`: queue, runner, prompt compiler, judge, scheduler), Opervio MCP server (`mcp/`), Noor (`noor/`), tools (`tools/`: policy hook, browser modes, Python) |
 | `apps/web` | React + Vite + Tailwind v4 + shadcn/Base UI + TanStack Router/Query/Table, ECharts, dnd-kit, cmdk. Home command center, Noor panel, dynamic page renderer (`components/registry`), agent drawer + effective-prompt inspector, outputs, settings, setup |
 
 ### Dynamic pages
 Noor composes pages from a fixed registry — hero, KPIs, metric, sparkline, line, bar, funnel, progress, table, kanban, timeline, calendar, list, agents, activity, decisions, outputs, markdown, filters, tabs — bound to data sources (typed record collections, tasks, agents, outputs, decisions, memory, metrics). Every change is validated with Zod; no HTML, no CSS. The renderer owns the design.
 
 ### Safety
-Routine work never asks for approval. A Claude Code `PreToolUse` hook routes every shell/file call through `tools/policy.ts`: system-critical destruction and credential reads are blocked; consequential actions (force-push, production deploys, publishing, destructive git/db operations) require your approval unless you gave standing permission in Settings. Secrets are redacted from logs, activity and AI context. The browser uses your own signed-in sessions; agents never handle passwords. The server only answers on `localhost`.
+Routine work never asks for approval. A Claude Code `PreToolUse` hook routes every shell/file call through `tools/policy.ts`: system-critical destruction and credential reads are blocked; consequential actions (force-push, production deploys, publishing, destructive git/db operations) require your approval unless you gave standing permission in Settings. Secrets are redacted from logs, activity and AI context. Agents use your own Chrome through the Claude in Chrome extension, which asks you before acting on a site; agents never handle passwords. The server only answers on `localhost`.
 
 ## Tests
 

@@ -14,7 +14,7 @@ import type {
 import type { Aggregate, DataSource, PageSpec } from './page';
 import type { CompiledPrompt, JudgeVerdict } from './prompt';
 import type { CollectionDef, FieldDef } from './records';
-import type { AiSettings, Autonomy, CommStyle, ToolSettings } from './setup';
+import type { AiSettings, Autonomy, BrowserMode, CommStyle, ToolSettings } from './setup';
 
 export interface FounderDTO {
   id: string;
@@ -279,7 +279,7 @@ export interface ProviderStatusDTO {
 }
 
 export interface ToolStatusDTO {
-  browser: { channel: string; available: boolean; signedIn: boolean; signInOpen: boolean };
+  browser: { mode: BrowserMode; channel: string };
   python: { available: boolean; version: string | null; venv: boolean; packages: string[]; installing: boolean; error: string | null };
   git: { available: boolean; version: string | null };
   workspaceDir: string;

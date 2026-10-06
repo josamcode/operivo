@@ -24,11 +24,14 @@ export async function providerStatus(force = false): Promise<Record<ProviderId, 
   return cache.status;
 }
 
-/** Resolves `auto` to a concrete available provider. Coding prefers Codex, everything else Claude. */
-export async function pickProvider(pref: ProviderId | 'auto', taskType?: TaskType): Promise<ProviderAdapter> {
+/**
+ * Resolves `auto` to a concrete available provider. Coding prefers Codex, everything else Claude —
+ * and work that needs the founder's own Chrome goes to Claude, the provider that can drive it.
+ */
+export async function pickProvider(pref: ProviderId | 'auto', taskType?: TaskType, opts: { needsYourChrome?: boolean } = {}): Promise<ProviderAdapter> {
   const status = await providerStatus();
   if (pref !== 'auto' && status[pref].available) return adapters[pref];
-  const order: ProviderId[] = taskType === 'coding' ? ['codex', 'claude'] : ['claude', 'codex'];
+  const order: ProviderId[] = taskType === 'coding' && !opts.needsYourChrome ? ['codex', 'claude'] : ['claude', 'codex'];
   if (pref !== 'auto') order.unshift(pref);
   const id = order.find((p) => status[p].available);
   if (!id) throw new Error('No AI provider is available. Install and sign in to Claude Code or Codex.');

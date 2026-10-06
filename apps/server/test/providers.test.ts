@@ -20,6 +20,13 @@ describe('Claude Code adapter', () => {
     expect(args).toContain('bypassPermissions');
   });
 
+  it('drives the founder’s own Chrome only when asked (no new browser profile)', () => {
+    const own = claudeArgs({ ...base, browser: 'your-chrome' }, {});
+    expect(own).toContain('--chrome');
+    expect(own).not.toContain('--no-chrome');
+    expect(claudeArgs(base, {})).toContain('--no-chrome');
+  });
+
   it('omits the model flag for the default model and disables tools for reasoning-only calls', () => {
     const args = claudeArgs({ ...base, model: 'default', builtinTools: 'none', jsonSchema: { type: 'object' } }, {});
     expect(args).not.toContain('--model');

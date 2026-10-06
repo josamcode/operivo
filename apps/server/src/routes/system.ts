@@ -14,7 +14,6 @@ import { allProviders, providerStatus } from '../providers/registry';
 import { configureQueue } from '../runtime/queue';
 import { runEvent } from '../runtime/events';
 import { getAiSettings, getToolSettings, setAiSettings, setToolSettings } from '../settings';
-import { openSignInBrowser, signedIn, signInOpen } from '../tools/browser';
 import { applyStandingPermissions, checkToolUse } from '../tools/policy';
 import { ensurePython, pythonStatus } from '../tools/python';
 
@@ -51,7 +50,7 @@ export function systemRoutes(app: FastifyInstance) {
       tools,
       providers: allProviders().map((p) => ({ id: p.id, label: p.label, ...status[p.id], efforts: p.efforts, models: p.models })),
       toolStatus: {
-        browser: { channel: tools.browserChannel, available: true, signedIn: signedIn(), signInOpen: signInOpen() },
+        browser: { mode: tools.browserMode, channel: tools.browserChannel },
         python: py,
         git: { available: git.exitCode === 0, version: git.exitCode === 0 ? String(git.stdout).replace('git version ', '').trim() : null },
         workspaceDir: tools.workspaceDir,
@@ -100,13 +99,6 @@ export function systemRoutes(app: FastifyInstance) {
 
   app.post('/api/tools/python/install', async () => {
     void ensurePython().then(() => bus.invalidate('settings'));
-    bus.invalidate('settings');
-    return { ok: true };
-  });
-
-  app.post('/api/tools/browser/signin', async (req) => {
-    const { url } = z.object({ url: z.string().url().optional() }).parse(req.body ?? {});
-    await openSignInBrowser(url);
     bus.invalidate('settings');
     return { ok: true };
   });
