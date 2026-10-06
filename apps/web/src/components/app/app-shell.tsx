@@ -3,6 +3,7 @@ import { Bell, Menu } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
+import { useMediaQuery } from '@/hooks/use-media-query';
 import { api } from '@/lib/api';
 import { ago } from '@/lib/format';
 import { onNotification } from '@/lib/live';
@@ -92,13 +93,7 @@ export function TopBar({ title, children }: { title?: ReactNode; children?: Reac
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { noorOpen, setNoorOpen } = useUi();
-  const [wide, setWide] = useState(() => matchMedia('(min-width: 1280px)').matches);
-  useEffect(() => {
-    const mq = matchMedia('(min-width: 1280px)');
-    const on = () => setWide(mq.matches);
-    mq.addEventListener('change', on);
-    return () => mq.removeEventListener('change', on);
-  }, []);
+  const wide = useMediaQuery('(min-width: 1280px)');
 
   return (
     <div className="flex h-dvh overflow-hidden bg-canvas">

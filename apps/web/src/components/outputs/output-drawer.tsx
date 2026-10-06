@@ -92,7 +92,7 @@ export function OutputDrawer() {
   };
   return (
     <Sheet open={Boolean(outputId)} onOpenChange={(o) => !o && close()}>
-      <SheetContent side="right" className="w-full gap-0 bg-surface p-0 sm:max-w-[760px]">
+      <SheetContent side="right" resizable={{ id: 'output', defaultWidth: 760 }} className="w-full gap-0 bg-surface p-0 sm:max-w-[760px]">
         {a ? (
           <>
             <SheetHeader className="flex-row items-start gap-3 px-5 pt-5 pb-3">

@@ -85,8 +85,20 @@ export async function registerArtifact(input: {
   return { artifact, created: !existing };
 }
 
-const IGNORE = ['**/node_modules/**', '**/.git/**', '**/.venv/**', '**/__pycache__/**', '**/.*', '**/*.tmp', '**/~$*', '**/playwright-mcp/**'];
-const DELIVERABLE_EXT = Object.keys(EXT).map((e) => e.slice(1));
+const IGNORE = [
+  '**/node_modules/**',
+  '**/.git/**',
+  '**/.venv/**',
+  '**/__pycache__/**',
+  '**/.*',
+  '**/*.tmp',
+  '**/~$*',
+  '**/playwright-mcp/**',
+  // Agents' scratch space is not a deliverable.
+  '**/{tmp,temp,scratch,cache,.cache,work,raw}/**',
+];
+/** Auto-pickup is conservative: documents founders open. Data dumps (json, txt…) need an explicit save_output. */
+const DELIVERABLE_EXT = ['xlsx', 'xlsm', 'csv', 'pptx', 'docx', 'pdf', 'md', 'png', 'jpg', 'jpeg', 'webp', 'svg', 'html'];
 
 /** Picks up deliverable files an agent created in its workspace but forgot to register. */
 export async function scanWorkspace(dir: string, since: Date, meta: { agentId: string; taskId: string; runId: string; focusId: string | null }) {

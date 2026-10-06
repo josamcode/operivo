@@ -124,7 +124,7 @@ function RecordDrawer() {
   const { record, closeRecord } = usePageCtx();
   return (
     <Sheet open={Boolean(record)} onOpenChange={(o) => !o && closeRecord()}>
-      <SheetContent side="right" className="w-full gap-0 bg-surface p-0 sm:max-w-[520px]">
+      <SheetContent side="right" resizable={{ id: 'record', defaultWidth: 520 }} className="w-full gap-0 bg-surface p-0 sm:max-w-[520px]">
         {record && (
           <>
             <SheetHeader className="px-5 pt-5 pb-3">

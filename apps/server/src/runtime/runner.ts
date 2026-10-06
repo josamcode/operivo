@@ -29,7 +29,8 @@ import { cancelMode, enqueueTask } from './queue';
 
 const CODEX_FALLBACK_MODEL = process.env.OPERVIO_CODEX_FALLBACK_MODEL || 'gpt-5.5';
 const RUN_TIMEOUT_MS = Number(process.env.OPERVIO_RUN_TIMEOUT_MIN || 60) * 60_000;
-const DELIVERABLE = /\.(xlsx|xls|csv|pptx|docx|pdf|md|png|jpe?g|webp|svg|json|html|txt)$/i;
+const DELIVERABLE = /\.(xlsx|xls|csv|pptx|docx|pdf|md|png|jpe?g|webp|svg|html)$/i;
+const SCRATCH = /[\\/](tmp|temp|scratch|cache|\.cache|work|raw)[\\/]/i;
 
 const followUpMessage = (followUp: string) =>
   `Continue the same task.\n\n${followUp}\n\nWhen finished, make sure every deliverable is saved and registered with save_output, then give your short final summary.`;
@@ -117,7 +118,7 @@ export async function runTask(taskId: string, signal: AbortSignal) {
     awaitWriteFinish: { stabilityThreshold: 700 },
   });
   watcher.on('add', (p) => {
-    if (DELIVERABLE.test(p)) void ev('file', `Created ${basename(p)}`, { path: p });
+    if (DELIVERABLE.test(p) && !SCRATCH.test(p)) void ev('file', `Created ${basename(p)}`, { path: p });
   });
 
   await ev('status', `Working · ${provider.label} · ${effort}`, { provider: provider.id, model, effort });

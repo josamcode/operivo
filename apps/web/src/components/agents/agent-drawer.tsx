@@ -277,7 +277,7 @@ export function AgentDrawer() {
   const { data: agent } = useAgent(agentId);
   return (
     <Sheet open={Boolean(agentId)} onOpenChange={(o) => !o && close()}>
-      <SheetContent side="right" className="w-full gap-0 bg-surface p-0 sm:max-w-[560px]">
+      <SheetContent side="right" resizable={{ id: 'agent', defaultWidth: 560 }} className="w-full gap-0 bg-surface p-0 sm:max-w-[560px]">
         {agent ? (
           <>
             <SheetHeader className="flex-row items-center gap-3 px-5 pt-5 pb-4">

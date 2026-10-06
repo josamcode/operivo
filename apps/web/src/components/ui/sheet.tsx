@@ -5,6 +5,8 @@ import { Dialog as SheetPrimitive } from "@base-ui/react/dialog"
 import { cn } from "@/lib/utils"
 
 import { Button } from "@/components/ui/button"
+import { useMediaQuery } from "@/hooks/use-media-query"
+import { useResizableWidth, type ResizableOptions, type ResizableWidth } from "@/hooks/use-resizable-width"
 import { XIcon } from "lucide-react"
 
 function Sheet({ ...props }: SheetPrimitive.Root.Props) {
@@ -41,14 +43,130 @@ function SheetContent({
   children,
   side = "right",
   showCloseButton = true,
+  resizable,
+  style,
+  ...props
+}: SheetPrimitive.Popup.Props & {
+  side?: "top" | "right" | "bottom" | "left"
+  showCloseButton?: boolean
+  /** Lets the founder drag the inner edge to make a side sheet wider or narrower. */
+  resizable?: ResizableOptions
+}) {
+  return (
+    <SheetPortal>
+      <SheetOverlay />
+      {resizable && (side === "left" || side === "right") ? (
+        <ResizableSheetPopup side={side} options={resizable} className={className} style={style} showCloseButton={showCloseButton} {...props}>
+          {children}
+        </ResizableSheetPopup>
+      ) : (
+        <SheetPopup side={side} className={className} style={style} showCloseButton={showCloseButton} {...props}>
+          {children}
+        </SheetPopup>
+      )}
+    </SheetPortal>
+  )
+}
+
+/** Side sheets get a drag handle on their inner edge; the width is remembered per sheet. */
+function ResizableSheetPopup({
+  side,
+  options,
+  className,
+  style,
+  children,
+  ...props
+}: React.ComponentProps<typeof SheetPopup> & { side: "left" | "right"; options: ResizableOptions }) {
+  const size = useResizableWidth(options)
+  const wide = useMediaQuery("(min-width: 640px)")
+  return (
+    <SheetPopup
+      side={side}
+      data-resizing={size.dragging ? "" : undefined}
+      className={cn(size.dragging && "transition-none select-none", className)}
+      style={wide ? { ...style, width: size.width, maxWidth: "none" } : style}
+      {...props}
+    >
+      {wide && <SheetResizeHandle side={side} size={size} />}
+      {children}
+    </SheetPopup>
+  )
+}
+
+function SheetResizeHandle({ side, size }: { side: "left" | "right"; size: ResizableWidth }) {
+  const start = React.useRef<{ x: number; width: number } | null>(null)
+  // Dragging toward the page widens a right-side sheet (and the opposite for a left-side one).
+  const direction = side === "right" ? -1 : 1
+
+  const end = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!start.current) return
+    start.current = null
+    e.currentTarget.releasePointerCapture?.(e.pointerId)
+    size.setDragging(false)
+    size.persist()
+    document.body.style.removeProperty("cursor")
+  }
+
+  return (
+    <div
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Resize panel"
+      aria-valuenow={size.width}
+      aria-valuemin={size.minWidth}
+      aria-valuemax={size.maxWidth}
+      tabIndex={0}
+      title="Drag to resize · double-click to reset"
+      onPointerDown={(e) => {
+        if (e.button !== 0) return
+        e.preventDefault()
+        e.currentTarget.setPointerCapture?.(e.pointerId)
+        start.current = { x: e.clientX, width: size.width }
+        size.setDragging(true)
+        document.body.style.cursor = "col-resize"
+      }}
+      onPointerMove={(e) => {
+        if (!start.current) return
+        size.setWidth(start.current.width + direction * (e.clientX - start.current.x))
+      }}
+      onPointerUp={end}
+      onPointerCancel={end}
+      onDoubleClick={() => size.reset()}
+      onKeyDown={(e) => {
+        const step = e.shiftKey ? 96 : 32
+        if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+          e.preventDefault()
+          const towardPage = (e.key === "ArrowLeft") === (side === "right")
+          size.setWidth(size.width + (towardPage ? step : -step))
+          size.persist()
+        }
+      }}
+      className={cn(
+        "group/resize absolute inset-y-0 z-10 w-3 cursor-col-resize touch-none outline-none",
+        side === "right" ? "-left-1.5" : "-right-1.5"
+      )}
+    >
+      <span
+        className={cn(
+          "absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 bg-brand opacity-0 transition-opacity group-hover/resize:opacity-50 group-focus-visible/resize:opacity-70",
+          size.dragging && "opacity-80 group-hover/resize:opacity-80"
+        )}
+      />
+    </div>
+  )
+}
+
+function SheetPopup({
+  className,
+  children,
+  side = "right",
+  showCloseButton = true,
   ...props
 }: SheetPrimitive.Popup.Props & {
   side?: "top" | "right" | "bottom" | "left"
   showCloseButton?: boolean
 }) {
   return (
-    <SheetPortal>
-      <SheetOverlay />
       <SheetPrimitive.Popup
         data-slot="sheet-content"
         data-side={side}
@@ -76,7 +194,6 @@ function SheetContent({
           </SheetPrimitive.Close>
         )}
       </SheetPrimitive.Popup>
-    </SheetPortal>
   )
 }
 
