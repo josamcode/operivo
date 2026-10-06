@@ -1,0 +1,376 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource-variable/geist";
+@import "@fontsource/ibm-plex-sans-arabic/400.css";
+@import "@fontsource/ibm-plex-sans-arabic/500.css";
+@import "@fontsource/ibm-plex-sans-arabic/600.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Opervio design tokens.
+ * Light: warm-neutral canvas, crisp white surfaces, charcoal ink, one accent (Noor blue).
+ * Dark: charcoal-navy with layered elevation — same product, not an inversion.
+ */
+:root {
+  --radius: 0.625rem;
+
+  --canvas: #f5f5f2;
+  --background: #f5f5f2;
+  --foreground: #1c1c1f;
+  --surface: #ffffff;
+  --surface-2: #fafaf8;
+  --surface-sunken: #efefeb;
+  --card: #ffffff;
+  --card-foreground: #1c1c1f;
+  --popover: #ffffff;
+  --popover-foreground: #1c1c1f;
+
+  --ink-2: #5d5d66;
+  --ink-3: #8b8b93;
+  --ink-4: #b4b4ba;
+
+  --primary: #1c1c1f;
+  --primary-foreground: #fafaf8;
+  --secondary: #efefeb;
+  --secondary-foreground: #1c1c1f;
+  --muted: #f0f0ec;
+  --muted-foreground: #6b6b73;
+  --accent: #efefeb;
+  --accent-foreground: #1c1c1f;
+
+  --brand: #2a78d6;
+  --brand-ink: #1c5cab;
+  --brand-soft: color-mix(in oklch, #2a78d6 10%, transparent);
+  --brand-glow: color-mix(in oklch, #2a78d6 35%, transparent);
+
+  --positive: #1a8a5c;
+  --positive-soft: color-mix(in oklch, #1a8a5c 11%, transparent);
+  --warning: #b8750d;
+  --warning-soft: color-mix(in oklch, #c98500 13%, transparent);
+  --destructive: #d23f2c;
+  --negative-soft: color-mix(in oklch, #d23f2c 10%, transparent);
+
+  --border: #e6e5e1;
+  --border-strong: #d7d6d1;
+  --input: #dddcd7;
+  --ring: color-mix(in oklch, #2a78d6 55%, transparent);
+
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --grid: #ecebe7;
+
+  --shadow-xs: 0 1px 0 rgb(20 20 24 / 0.03);
+  --shadow-sm: 0 1px 2px rgb(20 20 24 / 0.05), 0 0 0 1px rgb(20 20 24 / 0.02);
+  --shadow-md: 0 1px 2px rgb(20 20 24 / 0.04), 0 8px 24px -10px rgb(20 20 24 / 0.14);
+  --shadow-lg: 0 2px 4px rgb(20 20 24 / 0.04), 0 24px 48px -16px rgb(20 20 24 / 0.22);
+
+  --sidebar: #f0f0ec;
+}
+
+.dark {
+  --canvas: #0f1115;
+  --background: #0f1115;
+  --foreground: #ecedef;
+  --surface: #16191f;
+  --surface-2: #1b1f26;
+  --surface-sunken: #0c0e11;
+  --card: #16191f;
+  --card-foreground: #ecedef;
+  --popover: #1b1f26;
+  --popover-foreground: #ecedef;
+
+  --ink-2: #a5a9b2;
+  --ink-3: #737882;
+  --ink-4: #4f535c;
+
+  --primary: #ecedef;
+  --primary-foreground: #16191f;
+  --secondary: #222730;
+  --secondary-foreground: #ecedef;
+  --muted: #1e222a;
+  --muted-foreground: #8b9099;
+  --accent: #222730;
+  --accent-foreground: #ecedef;
+
+  --brand: #3987e5;
+  --brand-ink: #7fb0f0;
+  --brand-soft: color-mix(in oklch, #3987e5 16%, transparent);
+  --brand-glow: color-mix(in oklch, #3987e5 45%, transparent);
+
+  --positive: #3fb984;
+  --positive-soft: color-mix(in oklch, #3fb984 14%, transparent);
+  --warning: #e0a53a;
+  --warning-soft: color-mix(in oklch, #e0a53a 14%, transparent);
+  --destructive: #ef6a58;
+  --negative-soft: color-mix(in oklch, #ef6a58 14%, transparent);
+
+  --border: #252a33;
+  --border-strong: #303641;
+  --input: #2c313b;
+  --ring: color-mix(in oklch, #3987e5 60%, transparent);
+
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --grid: #222730;
+
+  --shadow-xs: 0 1px 0 rgb(0 0 0 / 0.2);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.35), 0 0 0 1px rgb(255 255 255 / 0.02);
+  --shadow-md: 0 1px 2px rgb(0 0 0 / 0.3), 0 10px 28px -10px rgb(0 0 0 / 0.55);
+  --shadow-lg: 0 2px 6px rgb(0 0 0 / 0.3), 0 28px 56px -16px rgb(0 0 0 / 0.7);
+
+  --sidebar: #0c0e12;
+}
+
+@theme inline {
+  --font-sans: "Geist Variable", "IBM Plex Sans Arabic", ui-sans-serif, system-ui, sans-serif;
+  --font-arabic: "IBM Plex Sans Arabic", "Geist Variable", system-ui, sans-serif;
+
+  --color-canvas: var(--canvas);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-sunken: var(--surface-sunken);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-ink-4: var(--ink-4);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-soft: var(--brand-soft);
+  --color-positive: var(--positive);
+  --color-positive-soft: var(--positive-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-destructive: var(--destructive);
+  --color-negative-soft: var(--negative-soft);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "ss01", "cv11";
+  }
+  body {
+    @apply bg-canvas text-foreground font-sans;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  :lang(ar),
+  [dir="rtl"] {
+    font-family: var(--font-arabic);
+  }
+  ::selection {
+    background: color-mix(in oklch, var(--brand) 22%, transparent);
+  }
+  .num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in oklch, var(--ink-3) 35%, transparent);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+/* Noor's light: the single expressive element. It only glows while work is happening. */
+@keyframes noor-breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--brand-glow);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 5px transparent, 0 0 14px 2px var(--brand-glow);
+    transform: scale(1.06);
+  }
+}
+@keyframes live-dot {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklch, var(--positive) 45%, transparent);
+  }
+  80%,
+  100% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+}
+@keyframes shimmer {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+.noor-live {
+  animation: noor-breathe 2.4s ease-in-out infinite;
+}
+.live-dot {
+  animation: live-dot 1.8s ease-out infinite;
+}
+.text-shimmer {
+  background: linear-gradient(90deg, var(--ink-3) 0%, var(--foreground) 50%, var(--ink-3) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 2.2s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .noor-live,
+  .live-dot,
+  .text-shimmer {
+    animation: none;
+  }
+  .text-shimmer {
+    color: var(--ink-2);
+  }
+}
+
+/* Markdown rendered from AI output: calm, readable, never a wall. */
+.prose-opervio {
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+.prose-opervio > * + * {
+  margin-top: 0.6em;
+}
+.prose-opervio h1,
+.prose-opervio h2,
+.prose-opervio h3 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin-top: 1.1em;
+}
+.prose-opervio h1 {
+  font-size: 1.15em;
+}
+.prose-opervio h2 {
+  font-size: 1.05em;
+}
+.prose-opervio h3 {
+  font-size: 1em;
+}
+.prose-opervio ul,
+.prose-opervio ol {
+  padding-inline-start: 1.25em;
+}
+.prose-opervio ul {
+  list-style: disc;
+}
+.prose-opervio ol {
+  list-style: decimal;
+}
+.prose-opervio li + li {
+  margin-top: 0.2em;
+}
+.prose-opervio li::marker {
+  color: var(--ink-3);
+}
+.prose-opervio a {
+  color: var(--brand-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in oklch, var(--brand) 35%, transparent);
+}
+.prose-opervio code {
+  font-size: 0.88em;
+  background: var(--muted);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+}
+.prose-opervio pre {
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  padding: 0.8em 1em;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 12.5px;
+}
+.prose-opervio pre code {
+  background: none;
+  padding: 0;
+}
+.prose-opervio blockquote {
+  border-inline-start: 2px solid var(--border-strong);
+  padding-inline-start: 0.9em;
+  color: var(--ink-2);
+}
+.prose-opervio table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92em;
+}
+.prose-opervio th,
+.prose-opervio td {
+  border-bottom: 1px solid var(--border);
+  padding: 0.4em 0.6em;
+  text-align: start;
+}
+.prose-opervio th {
+  color: var(--ink-2);
+  font-weight: 500;
+}
+.prose-opervio strong {
+  font-weight: 600;
+}
+.prose-opervio hr {
+  border-color: var(--border);
+}
+
+/* Shiki dual theme (code previews) */
+.shiki-wrap pre {
+  margin: 0;
+  padding: 12px 14px;
+  background: var(--surface-sunken) !important;
+  line-height: 1.55;
+}
+.shiki-wrap .shiki span {
+  color: var(--shiki-light);
+}
+.dark .shiki-wrap .shiki span {
+  color: var(--shiki-dark);
+}
