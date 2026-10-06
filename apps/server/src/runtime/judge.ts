@@ -1,4 +1,5 @@
-import { JudgeVerdict, type ArtifactPreview, type ArtifactType, type RoleDefaults } from '@opervio/contracts';
+import { JudgeVerdict, VerdictStatus, type ArtifactPreview, type ArtifactType, type RoleDefaults } from '@opervio/contracts';
+import { z } from 'zod';
 import { buildPreview } from '../domain/artifacts';
 import { redact } from '../lib/redact';
 import { clip } from '../lib/text';
@@ -95,8 +96,19 @@ export async function judgeResult(input: JudgeInput, defaults: RoleDefaults): Pr
     .filter(Boolean)
     .join('\n\n');
 
-  const res = await completeJson({ defaults, system: SYSTEM, prompt: `${redact(evidence)}\n\nReturn the verdict as JSON.`, schema: JudgeVerdict, timeoutMs: 120_000 });
-  if (res) return { ...res.data, method: 'ai', judgeModel: `${res.provider} · ${res.model} · ${res.effort}` };
+  // Model-facing schema has no length limits (they trigger slow validation retries); clipped after.
+  const Loose = z.object({ status: VerdictStatus, summary: z.string(), missing: z.array(z.string()), feedback: z.string().optional(), founderQuestion: z.string().optional() });
+  const res = await completeJson({ defaults, system: SYSTEM, prompt: `${redact(evidence)}\n\nReturn the verdict as JSON.`, schema: Loose, timeoutMs: 120_000 });
+  if (res) {
+    const v = JudgeVerdict.parse({
+      status: res.data.status,
+      summary: clip(res.data.summary, 600),
+      missing: res.data.missing.slice(0, 8).map((m) => clip(m, 300)),
+      feedback: res.data.feedback ? clip(res.data.feedback, 1500) : undefined,
+      founderQuestion: res.data.founderQuestion ? clip(res.data.founderQuestion, 400) : undefined,
+    });
+    return { ...v, method: 'ai', judgeModel: `${res.provider} · ${res.model} · ${res.effort}` };
+  }
 
   // Judge unavailable: rules already passed, so trust the evidence that exists.
   return {

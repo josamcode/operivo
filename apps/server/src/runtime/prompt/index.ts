@@ -1,4 +1,5 @@
-import type { CompiledPrompt, ProviderId } from '@opervio/contracts';
+import { CollectionDef, collectionsUsed, PageSpec, type CompiledPrompt, type ProviderId } from '@opervio/contracts';
+import { db } from '../../db';
 import type { Agent, Focus, Founder, Task } from '../../generated/prisma/client';
 import { log } from '../../log';
 import { getAiSettings } from '../../settings';
@@ -26,6 +27,15 @@ export interface CompileInput {
 export async function compilePrompt(input: CompileInput): Promise<{ prompt: CompiledPrompt; interp: Interpretation }> {
   const interp = interpretTask(input.task);
   const context = await retrieveContext({ ...input, interp });
+  const page = input.focus ? await db.page.findUnique({ where: { focusId: input.focus.id } }) : null;
+  const spec = page ? PageSpec.safeParse(page.spec) : null;
+  const keys = spec?.success ? collectionsUsed(spec.data) : [];
+  const collections = keys.length
+    ? (await db.collection.findMany({ where: { key: { in: keys } } })).map((c) => {
+        const def = CollectionDef.parse(c.def);
+        return { key: def.key, title: def.title, fields: def.fields.map((f) => `${f.key}:${f.type}${f.options ? `(${f.options.join('|')})` : ''}`) };
+      })
+    : [];
   let skeleton = compileSkeleton({
     task: input.task,
     agent: input.agent,
@@ -37,6 +47,7 @@ export async function compilePrompt(input: CompileInput): Promise<{ prompt: Comp
     workdir: input.workdir,
     pythonPath: venvPython(),
     browserSignedIn: signedIn(),
+    collections,
   });
   let engineerNote: string | undefined;
   const ai = await getAiSettings();

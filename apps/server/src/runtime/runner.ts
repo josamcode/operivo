@@ -84,7 +84,7 @@ export async function runTask(taskId: string, signal: AbortSignal) {
   const followUp = task.followUp;
   const resume = followUp && prev?.sessionId ? prev.sessionId : undefined;
 
-  await ev('status', attempt === 1 ? 'Preparing instructions' : 'Applying feedback');
+  await ev('status', followUp ? 'Applying feedback' : attempt === 1 ? 'Preparing instructions' : 'Resuming after a restart');
   let compiled: CompiledPrompt;
   if (resume && prev?.prompt) {
     compiled = prev.prompt as unknown as CompiledPrompt;
@@ -138,6 +138,7 @@ export async function runTask(taskId: string, signal: AbortSignal) {
       env: { OPERVIO_POLICY_URL: policyUrl(token) },
       scratchDir: join(config.paths.runtime, 'scratch'),
     });
+    if (handle.pid) await db.run.update({ where: { id: run.id }, data: { pid: handle.pid } });
     for await (const e of handle.events) {
       if (e.type === 'session') {
         sessionId = e.sessionId;
@@ -202,7 +203,7 @@ export async function runTask(taskId: string, signal: AbortSignal) {
     await db.task.update({ where: { id: taskId }, data: { status: 'failed', summary: message, finishedAt: new Date() } });
     await db.agent.update({ where: { id: agent.id }, data: { status: 'failed' } });
     await ev('error', 'Run failed', { message });
-    await notify('failed', `${agent.name} stopped: ${task.title}`, message, `/agents/${agent.id}`);
+    await notify('failed', `${agent.name} stopped: ${task.title}`, message, `?agent=${agent.id}`);
     runState.delete(run.id);
     bus.invalidate('agents', 'tasks', 'home', 'nav');
     return;
@@ -243,7 +244,7 @@ export async function runTask(taskId: string, signal: AbortSignal) {
   await ev('judge', `${judgeLabel} — ${clip(verdict.summary, 140)}`, verdict);
 
   const verdictJson = verdict as unknown as Prisma.InputJsonValue;
-  const link = `/agents/${agent.id}`;
+  const link = `?agent=${agent.id}`;
   switch (verdict.status) {
     case 'complete': {
       await db.task.update({ where: { id: taskId }, data: { status: 'done', verdict: verdictJson, summary: clip(finalText, 2000), finishedAt: new Date() } });

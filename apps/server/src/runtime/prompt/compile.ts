@@ -12,6 +12,8 @@ export interface SkeletonInput {
   workdir: string;
   pythonPath: string;
   browserSignedIn: boolean;
+  /** Collections the focus page displays — results recorded there update the founder's page live. */
+  collections?: { key: string; title: string; fields: string[] }[];
 }
 
 const ASK_LABEL: Record<string, string> = {
@@ -118,15 +120,34 @@ export function compileSkeleton(i: SkeletonInput): Omit<CompiledPrompt, 'text' |
     ...outputs.map((t) => `A real .${t === 'image' ? 'png' : t} file saved in the working directory and registered with save_output`),
   ]);
   const role = `You are ${i.agent.name}, acting as ${i.agent.role} for ${i.founder.name}${i.focus ? ` on "${i.focus.name}"` : ''}.`;
+  const text = `${i.task.title} ${i.task.objective} ${i.task.deliverable}`.toLowerCase();
+  const pageData = (i.collections ?? []).map((c) => ({
+    ...c,
+    related: i.interp.needs.records || text.includes(c.key.toLowerCase()) || text.includes(c.title.toLowerCase()),
+  }));
+  const pageLines = pageData.map(
+    (c) =>
+      `The founder's ${i.focus?.name ?? ''} page shows the "${c.key}" collection (fields: ${c.fields.join(', ')}). ${
+        c.related ? 'Record every result item there with upsert_records (stable key such as the domain or URL) so the page updates live.' : 'If your results are items of this kind, record them there with upsert_records.'
+      }`,
+  );
   return {
     role,
     objective: i.task.objective,
     why: i.focus ? `${i.focus.why}` : `Requested by ${i.founder.name} through Noor, their chief of staff.`,
     context: i.context,
     tools: availableTools(i),
-    instructions: [...(APPROACH[i.interp.taskType] ?? []), ...(i.interp.needs.records && i.interp.taskType !== 'lead_research' ? ['If the result is a list of items the founder will track, store them as structured records (define_collection / upsert_records).'] : [])],
+    instructions: [
+      ...(APPROACH[i.interp.taskType] ?? []),
+      ...pageLines,
+      ...(i.interp.needs.records && !pageData.length ? ['If the result is a list of items the founder will track, store them as structured records (define_collection / upsert_records).'] : []),
+    ],
     deliverables,
-    successCriteria: dedupe([...i.task.successCriteria, ...(outputs.length ? ['Every deliverable file exists, opens correctly and is registered with save_output.'] : [])]),
+    successCriteria: dedupe([
+      ...i.task.successCriteria,
+      ...(outputs.length ? ['Every deliverable file exists, opens correctly and is registered with save_output.'] : []),
+      ...pageData.filter((c) => c.related).map((c) => `Every result item is recorded in the "${c.key}" collection.`),
+    ]),
     constraints: universalConstraints(i),
     stopConditions: DEFAULT_STOP,
     avoid: [],
@@ -135,6 +156,13 @@ export function compileSkeleton(i: SkeletonInput): Omit<CompiledPrompt, 'text' |
 }
 
 const bullets = (lines: string[]) => lines.map((l) => `- ${l}`).join('\n');
+/** Context facts as one bullet per line, so they stay separate for the model and in the inspector. */
+const asLines = (content: string) =>
+  content
+    .split('\n')
+    .filter((l) => l.trim())
+    .map((l) => (/^\s*([-*]|\d+\.)\s/.test(l) ? l : `- ${l}`))
+    .join('\n');
 
 export function renderPrompt(p: Omit<CompiledPrompt, 'text' | 'systemText'>, title: string, workdir: string): string {
   const sections = [
@@ -142,7 +170,7 @@ export function renderPrompt(p: Omit<CompiledPrompt, 'text' | 'systemText'>, tit
     `## Role\n${p.role}`,
     `## Objective\n${p.objective}`,
     `## Why\n${p.why}`,
-    `## Context\n${p.context.map((c) => `### ${c.label}\n${c.content}`).join('\n\n')}`,
+    `## Context\n${p.context.map((c) => `### ${c.label}\n${asLines(c.content)}`).join('\n\n')}`,
     `## Available tools\n${p.tools.map((t) => `- **${t.label}** — ${t.usage}`).join('\n')}`,
     p.instructions.length ? `## Instructions\n${bullets(p.instructions)}` : '',
     `## Deliverables\n${bullets(p.deliverables)}`,

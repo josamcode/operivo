@@ -72,7 +72,7 @@ export async function createDecision(input: {
       focusId: focus?.id ?? null,
     },
   });
-  await notify('decision', decision.title, decision.recommendation, `/decisions/${decision.id}`);
+  await notify('decision', decision.title, decision.recommendation, `?decision=${decision.id}`);
   bus.invalidate('decisions', 'home');
   return decision;
 }

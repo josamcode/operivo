@@ -45,6 +45,7 @@ export type ProviderEvent =
 export interface ProviderRun {
   events: AsyncIterable<ProviderEvent>;
   cancel(): void;
+  pid?: number;
 }
 
 export interface ProviderStatus {

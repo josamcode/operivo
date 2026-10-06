@@ -176,6 +176,8 @@ model Run {
   lastActivity String?
   toolsUsed    String[]
   costUsd      Float?
+  /// OS pid of the provider CLI, so a restart can clean up orphaned process trees.
+  pid          Int?
   startedAt    DateTime   @default(now())
   finishedAt   DateTime?
   events       RunEvent[]

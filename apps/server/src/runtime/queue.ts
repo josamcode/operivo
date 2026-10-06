@@ -2,6 +2,7 @@ import PQueue from 'p-queue';
 import { bus } from '../bus';
 import { db } from '../db';
 import { log } from '../log';
+import { killProviderTree } from '../providers/process';
 import { getAiSettings } from '../settings';
 
 /**
@@ -69,6 +70,9 @@ export async function cancelTask(taskId: string, mode: 'stop' | 'pause') {
 /** After a restart: interrupted runs are marked, their tasks re-queued (they resume their session). */
 export async function recoverQueue() {
   await configureQueue();
+  // Provider CLIs (and their browsers) can outlive a crashed server — clean them up first.
+  const orphans = await db.run.findMany({ where: { status: { in: ['preparing', 'running', 'judging'] }, pid: { not: null } }, select: { pid: true } });
+  await Promise.all(orphans.map((r) => killProviderTree(r.pid ?? undefined)));
   const interrupted = await db.run.updateMany({
     where: { status: { in: ['preparing', 'running', 'judging'] } },
     data: { status: 'failed', error: 'Interrupted by restart', finishedAt: new Date() },

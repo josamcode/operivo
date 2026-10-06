@@ -42,7 +42,7 @@ export async function resolveSource(source: DataSource, focusId?: string | null)
       });
       return {
         fields: TASK_FIELDS,
-        rows: tasks.map((t) => ({ id: t.id, _kind: 'task', title: t.title, status: t.status, agent: t.agent.name, taskType: t.taskType, updatedAt: t.updatedAt.toISOString() })),
+        rows: tasks.map((t) => ({ id: t.id, _kind: 'task', title: t.title, status: t.status, agent: t.agent.name, agentId: t.agentId, taskType: t.taskType, updatedAt: t.updatedAt.toISOString() })),
         titleField: 'title',
         statusField: 'status',
         dateField: 'updatedAt',

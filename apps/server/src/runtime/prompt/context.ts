@@ -68,7 +68,10 @@ export async function retrieveContext({ task, focus, founder, workdir, interp }:
     items.push({ source: 'memory', label: 'Relevant memory', reason: 'Matched this task by search; dates show freshness', content: memLines.join('\n') });
   }
 
-  const approaches = await searchMemory(`${interp.taskType} ${interp.searchText}`, { kinds: ['approach'], limit: 2 });
+  // Only approaches from the same kind of work are useful precedent.
+  const approaches = (await searchMemory(`${interp.taskType} ${interp.searchText}`, { kinds: ['approach'], limit: 6 }))
+    .filter((a) => a.content.startsWith(`${interp.taskType} `))
+    .slice(0, 2);
   if (approaches.length) {
     items.push({
       source: 'approach',

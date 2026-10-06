@@ -31,6 +31,23 @@ export class AsyncQueue<T> implements AsyncIterable<T> {
   }
 }
 
+/** Kills a stored PID only if it still belongs to a provider CLI (PIDs get reused after reboots). */
+export async function killProviderTree(pid: number | undefined) {
+  if (!pid) return;
+  try {
+    if (process.platform === 'win32') {
+      const res = await execa('tasklist', ['/FI', `PID eq ${pid}`, '/FO', 'CSV', '/NH'], { reject: false, windowsHide: true });
+      if (!/"(claude|codex)(\.exe)?"/i.test(String(res.stdout))) return;
+    } else {
+      const res = await execa('ps', ['-p', String(pid), '-o', 'comm='], { reject: false });
+      if (!/claude|codex/i.test(String(res.stdout))) return;
+    }
+    await killTree(pid);
+  } catch {
+    /* gone */
+  }
+}
+
 export async function killTree(pid: number | undefined) {
   if (!pid) return;
   try {
@@ -116,5 +133,5 @@ export function spawnJsonl(opts: SpawnJsonlOptions): ProviderRun {
     queue.close();
   });
 
-  return { events: queue, cancel };
+  return { events: queue, cancel, pid: sub.pid };
 }

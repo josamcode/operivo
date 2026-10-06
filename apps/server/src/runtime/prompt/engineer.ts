@@ -1,8 +1,21 @@
 import { EngineeredInstructions, type CompiledPrompt, type RoleDefaults } from '@opervio/contracts';
+import { z } from 'zod';
 import { completeJson } from '../../providers/registry';
 import { clip } from '../../lib/text';
 
 type Skeleton = Omit<CompiledPrompt, 'text' | 'systemText'>;
+
+/** What the model is asked for: no length limits (those cause slow validation retries); clipped after. */
+const Loose = z.object({
+  scope: z.string(),
+  approach: z.array(z.string()),
+  successCriteria: z.array(z.string()),
+  deliverables: z.array(z.string()),
+  constraints: z.array(z.string()),
+  stopConditions: z.array(z.string()),
+  relevantTools: z.array(z.string()),
+  avoid: z.array(z.string()),
+});
 
 const SYSTEM = `You are Opervio's Prompt Engineer. You improve the instructions an autonomous AI agent will receive.
 
@@ -39,10 +52,25 @@ export async function engineerPrompt(skeleton: Skeleton, meta: { title: string; 
     defaults,
     system: SYSTEM,
     prompt: `Improve the instructions for this agent task. Return JSON only.\n\n${JSON.stringify(input, null, 2)}`,
-    schema: EngineeredInstructions,
-    timeoutMs: 90_000,
+    schema: Loose,
+    timeoutMs: 120_000,
   });
-  return res;
+  if (!res) return null;
+  // Clip into the strict contract instead of making the model retry against length limits.
+  const list = (v: string[], items: number, n: number) => v.filter(Boolean).slice(0, items).map((x) => clip(x, n));
+  const criteria = list(res.data.successCriteria, 10, 300);
+  const deliverables = list(res.data.deliverables, 8, 300);
+  const data = EngineeredInstructions.parse({
+    scope: clip(res.data.scope, 1200),
+    approach: list(res.data.approach, 8, 400),
+    successCriteria: criteria.length ? criteria : skeleton.successCriteria.slice(0, 1),
+    deliverables: deliverables.length ? deliverables : skeleton.deliverables.slice(0, 1),
+    constraints: list(res.data.constraints, 10, 300),
+    stopConditions: list(res.data.stopConditions, 6, 300),
+    relevantTools: list(res.data.relevantTools, 10, 80),
+    avoid: list(res.data.avoid, 8, 300),
+  });
+  return { ...res, data };
 }
 
 const norm = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
