@@ -63,7 +63,8 @@ export function libraryRoutes(app: FastifyInstance) {
     reply.header('content-type', MIME[extname(a.path).toLowerCase()] ?? 'application/octet-stream');
     reply.header('content-disposition', `${req.query.download ? 'attachment' : 'inline'}; filename*=UTF-8''${encodeURIComponent(name)}`);
     reply.header('x-content-type-options', 'nosniff');
-    reply.header('content-security-policy', "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'");
+    // Agent-made files (SVG, HTML…) must never run script on Opervio's origin. PDFs use the browser's sandboxed viewer.
+    if (!a.path.toLowerCase().endsWith('.pdf')) reply.header('content-security-policy', "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox");
     return reply.send(fs.createReadStream(a.path));
   });
 
