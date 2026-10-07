@@ -20,7 +20,7 @@ import type { ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useIsDark } from '@/hooks/use-theme';
-import { isRtl } from '@/lib/format';
+import { t } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 
 /** A surface that groups related content. Hierarchy comes from type and spacing, not boxes-in-boxes. */
@@ -92,7 +92,7 @@ export function StatusPill({ status, className }: { status: TaskStatus | AgentSt
   const s = STATUS[status] ?? { label: status, tone: 'neutral' as Tone, icon: CircleDashed };
   return (
     <Chip tone={s.tone} icon={s.icon} className={className}>
-      {s.label}
+      {t(s.label)}
     </Chip>
   );
 }
@@ -169,20 +169,84 @@ export function FileGlyph({ type, size = 32, className }: { type: ArtifactType; 
   );
 }
 
-/** AI text: direction follows the content (Egyptian Arabic or English). Raw HTML is never rendered. */
+/**
+ * AI text: every paragraph, heading and list picks its own direction from its content, so mixed
+ * Arabic/English answers read correctly line by line. Raw HTML is never rendered.
+ */
+type BlockTag = 'p' | 'li' | 'ul' | 'ol' | 'h1' | 'h2' | 'h3' | 'blockquote' | 'th' | 'td';
+const auto = (Tag: BlockTag) =>
+  function Auto({ node: _n, ...p }: React.HTMLAttributes<HTMLElement> & { node?: unknown }) {
+    const El = Tag as React.ElementType;
+    return <El dir="auto" {...p} />;
+  };
+const MD_COMPONENTS = {
+  a: ({ node: _n, ...p }: React.ComponentProps<'a'> & { node?: unknown }) => <a {...p} target="_blank" rel="noreferrer" />,
+  p: auto('p'),
+  li: auto('li'),
+  ul: auto('ul'),
+  ol: auto('ol'),
+  h1: auto('h1'),
+  h2: auto('h2'),
+  h3: auto('h3'),
+  blockquote: auto('blockquote'),
+  th: auto('th'),
+  td: auto('td'),
+};
+
 export function Markdown({ children, className }: { children: string; className?: string }) {
   return (
-    <div dir={isRtl(children) ? 'rtl' : 'ltr'} className={cn('prose-opervio', className)}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ a: ({ node: _n, ...p }) => <a {...p} target="_blank" rel="noreferrer" /> }}>
+    <div className={cn('prose-opervio', className)}>
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>
         {children}
       </ReactMarkdown>
     </div>
   );
 }
 
-export function AutoDir({ text, className, as: As = 'span' }: { text: string; className?: string; as?: 'span' | 'p' | 'div' | 'h1' | 'h2' }) {
+/** Plain text that may contain several lines in different languages (e.g. the founder's own messages). */
+export function MultilineText({ text, className }: { text: string; className?: string }) {
   return (
-    <As dir={isRtl(text) ? 'rtl' : undefined} className={className}>
+    <div className={className}>
+      {text.split(/\r?\n/).map((line, i) => (
+        <div key={i} dir="auto" className="min-h-[1lh]">
+          {line}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** "a · b · c" metadata where each part keeps its own direction (file names, names, dates). */
+export function Meta({ parts, className }: { parts: (string | null | undefined | false)[]; className?: string }) {
+  const shown = parts.filter((p): p is string => Boolean(p));
+  return (
+    <span className={className}>
+      {shown.map((p, i) => (
+        <span key={i}>
+          {i > 0 && ' · '}
+          <bdi dir={/\p{L}/u.test(p) ? undefined : 'ltr'}>{p}</bdi>
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/**
+ * User/AI text inside the interface.
+ * - default (labels, titles, names): keeps its own text direction but aligns with the interface, so an
+ *   English name in an Arabic row (or the reverse) never scrambles punctuation and truncates at its own end.
+ * - block (paragraphs): takes its natural direction and alignment from its own content.
+ */
+export function AutoDir({ text, className, as: As = 'span', block = false }: { text: string; className?: string; as?: 'span' | 'p' | 'div' | 'h1' | 'h2'; block?: boolean }) {
+  if (block) {
+    return (
+      <As dir="auto" className={className}>
+        {text}
+      </As>
+    );
+  }
+  return (
+    <As dir="auto" className={cn('ui-align', className)}>
       {text}
     </As>
   );

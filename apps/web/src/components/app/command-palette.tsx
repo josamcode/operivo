@@ -1,3 +1,4 @@
+import { t } from '@/lib/i18n';
 import type { ArtifactDTO } from '@opervio/contracts';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
@@ -58,87 +59,83 @@ export function CommandPalette() {
   };
 
   return (
-    <CommandDialog open={paletteOpen} onOpenChange={setPaletteOpen} title="Command palette" description="Search Opervio or ask Noor" className="sm:max-w-[620px]">
+    <CommandDialog open={paletteOpen} onOpenChange={setPaletteOpen} title={t('Command palette')} description={t('Search Opervio or ask Noor')} className="sm:max-w-[620px]">
       <Command shouldFilter loop>
-        <CommandInput dir="auto" value={q} onValueChange={setQ} placeholder="Ask Noor, open a page, find an output…" />
+        <CommandInput dir="auto" value={q} onValueChange={setQ} placeholder={t('Ask Noor, open a page, find an output…')} />
         <CommandList className="max-h-[420px]">
-          <CommandEmpty>Nothing found. Press Enter on “Ask Noor” to ask her instead.</CommandEmpty>
-          <CommandGroup heading="Noor">
+          <CommandEmpty>{t('Nothing found. Press Enter on “Ask Noor” to ask her instead.')}</CommandEmpty>
+          <CommandGroup heading={t('Noor')}>
             <CommandItem value={`ask noor ${q}`} onSelect={() => run(() => askNoor(q))} forceMount>
               <NoorMark size={16} />
               {q ? (
                 <span className="truncate">
-                  Ask Noor: <span dir="auto">“{q}”</span>
+                  <bdi>{t('Ask Noor: “{q}”', { q })}</bdi>
                 </span>
               ) : (
-                'Ask Noor'
+                t('Ask Noor')
               )}
-              <CommandShortcut>Ctrl J</CommandShortcut>
+              <CommandShortcut dir="ltr">Ctrl J</CommandShortcut>
             </CommandItem>
-            <CommandItem value="create new focus area" onSelect={() => run(() => askNoor('I want to add a new focus: '))}>
-              <Plus /> Create a new focus
+            <CommandItem value="create new focus area" onSelect={() => run(() => askNoor(t('I want to add a new focus: ')))}>
+              <Plus /> {t('Create a new focus')}
             </CommandItem>
           </CommandGroup>
-          <CommandGroup heading="Go to">
+          <CommandGroup heading={t('Go to')}>
             <CommandItem value="home" onSelect={() => run(() => void navigate({ to: '/' }))}>
-              <House /> Home
+              <House /> {t('Home')}
             </CommandItem>
             {boot?.nav.map((n) => {
               const Icon = pageIcon(n.icon);
               return (
                 <CommandItem key={n.slug} value={`open ${n.title}`} onSelect={() => run(() => void navigate({ to: '/p/$slug', params: { slug: n.slug } }))}>
-                  <Icon /> <span dir="auto">{n.title}</span>
+                  <Icon /> <bdi>{n.title}</bdi>
                 </CommandItem>
               );
             })}
             <CommandItem value="outputs files" onSelect={() => run(() => void navigate({ to: '/outputs' }))}>
-              <FolderOpen /> Outputs
+              <FolderOpen /> {t('Outputs')}
             </CommandItem>
             <CommandItem value="settings" onSelect={() => run(() => void navigate({ to: '/settings' }))}>
-              <Settings /> Settings
+              <Settings /> {t('Settings')}
             </CommandItem>
           </CommandGroup>
           {agents.length > 0 && (
-            <CommandGroup heading="Agents">
+            <CommandGroup heading={t('Agents')}>
               {agents.slice(0, 8).map((a) => (
                 <CommandItem key={a.id} value={`show ${a.name} ${a.role}`} onSelect={() => run(() => openAgent(a.id))}>
                   <AgentAvatar name={a.name} size={18} />
-                  {a.name}
-                  <span className="text-ink-3">{a.role}</span>
+                  <bdi>{a.name}</bdi>
+                  <span dir="auto" className="truncate text-ink-3 ui-align">{a.role}</span>
                 </CommandItem>
               ))}
             </CommandGroup>
           )}
           {found && found.outputs.length > 0 && (
-            <CommandGroup heading="Outputs">
+            <CommandGroup heading={t('Outputs')}>
               {found.outputs.map((o) => (
                 <CommandItem key={o.id} value={`output ${o.title} ${o.fileName} ${query}`} onSelect={() => run(() => openOutput(o.id))}>
                   <FileGlyph type={o.type} size={18} className="rounded-sm border-0 bg-transparent" />
-                  <span dir="auto" className="truncate">
-                    {o.title}
-                  </span>
+                  <span dir="auto" className="truncate ui-align">{o.title}</span>
                 </CommandItem>
               ))}
             </CommandGroup>
           )}
           {found && found.memories.length > 0 && (
-            <CommandGroup heading="Memory">
+            <CommandGroup heading={t('Memory')}>
               {found.memories.map((m) => (
                 <CommandItem key={m.id} value={`memory ${m.content} ${query}`} onSelect={() => run(() => void navigate({ to: '/settings', search: { tab: 'memory' } as never }))}>
                   <Brain />
-                  <span dir="auto" className="truncate text-ink-2">
-                    {m.content}
-                  </span>
+                  <span dir="auto" className="truncate text-ink-2 ui-align">{m.content}</span>
                 </CommandItem>
               ))}
             </CommandGroup>
           )}
-          <CommandGroup heading="Preferences">
+          <CommandGroup heading={t('Preferences')}>
             <CommandItem value="toggle theme dark light" onSelect={() => run(toggle)}>
-              <Moon /> Toggle light / dark
+              <Moon /> {t('Toggle light / dark')}
             </CommandItem>
             <CommandItem value="search memory" onSelect={() => run(() => void navigate({ to: '/settings', search: { tab: 'memory' } as never }))}>
-              <MessageSquare /> Search memory
+              <MessageSquare /> {t('Search memory')}
             </CommandItem>
           </CommandGroup>
         </CommandList>

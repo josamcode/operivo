@@ -15,8 +15,12 @@ interface UiState {
 
 const Ctx = createContext<UiState | null>(null);
 
+/** Wide enough to dock Noor beside the page; narrower screens get Noor as a sheet. */
+export const DOCKED_NOOR = '(min-width: 1280px)';
+
 export function UiProvider({ children }: { children: ReactNode }) {
   const [noorOpen, setNoorOpenState] = useState(() => {
+    if (window.matchMedia?.(DOCKED_NOOR).matches === false) return false;
     try {
       return localStorage.getItem('opervio-noor-open') !== '0';
     } catch {

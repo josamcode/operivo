@@ -1,8 +1,9 @@
+import { t as tr } from '@/lib/i18n';
 import type { ArtifactType } from '@opervio/contracts';
 import { FolderOpen, LayoutGrid, List, Search } from 'lucide-react';
 import { useDeferredValue, useState } from 'react';
 import { TopBar } from '@/components/app/app-shell';
-import { AutoDir, EmptyState, FileGlyph, fileMeta } from '@/components/app/primitives';
+import { AutoDir, EmptyState, FileGlyph, fileMeta, Meta } from '@/components/app/primitives';
 import { useDrawers } from '@/components/app/ui-state';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { ago, bytes } from '@/lib/format';
@@ -30,42 +31,51 @@ export function OutputsPage() {
 
   return (
     <>
-      <TopBar title="Outputs" />
+      <TopBar title={tr('Outputs')} />
       <div className="mx-auto w-full max-w-[1320px] space-y-5 px-4 py-8 lg:px-8">
         <header className="flex flex-wrap items-end gap-4">
           <div>
-            <h1 className="text-[26px] leading-tight font-semibold tracking-[-0.025em]">Outputs</h1>
-            <p className="text-[13.5px] text-ink-2">Every file your team has produced, newest first.</p>
+            <h1 className="text-[26px] leading-tight font-semibold tracking-[-0.025em]">{tr('Outputs')}</h1>
+            <p className="text-[13.5px] text-ink-2">{tr('Every file your team has produced, newest first.')}</p>
           </div>
-          <label className="ms-auto flex h-8 w-64 items-center gap-2 rounded-lg border border-input bg-surface px-2.5 text-[13px] shadow-xs">
+          <label className="ms-auto flex h-8 w-full items-center sm:w-64 gap-2 rounded-lg border border-input bg-surface px-2.5 text-[13px] shadow-xs">
             <Search className="size-3.5 text-ink-3" />
-            <input dir="auto" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find a file" className="min-w-0 flex-1 bg-transparent outline-none" />
+            <input dir="auto" value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr('Find a file')} className="min-w-0 flex-1 bg-transparent outline-none" />
           </label>
         </header>
 
-        <div className="flex items-center gap-1 border-b border-border">
-          {TYPES.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setTab(t.id)}
-              className={cn('-mb-px border-b-2 px-3 py-2 text-[13px] transition-colors', tab === t.id ? 'border-foreground font-medium text-foreground' : 'border-transparent text-ink-3 hover:text-ink-2')}
-            >
-              {t.label}
-            </button>
-          ))}
-          <ToggleGroup value={[layout]} onValueChange={(v) => v[0] && setLayout(v[0] as 'grid' | 'list')} className="ms-auto mb-1" size="sm">
-            <ToggleGroupItem value="grid" aria-label="Grid">
+        <div className="flex items-end gap-2 border-b border-border">
+          <div className="no-scrollbar -mb-px flex min-w-0 flex-1 gap-1 overflow-x-auto">
+            {TYPES.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setTab(t.id)}
+                className={cn(
+                  'shrink-0 border-b-2 px-3 py-2 text-[13px] whitespace-nowrap transition-colors',
+                  tab === t.id ? 'border-foreground font-medium text-foreground' : 'border-transparent text-ink-3 hover:text-ink-2',
+                )}
+              >
+                {tr(t.label)}
+              </button>
+            ))}
+          </div>
+          <ToggleGroup value={[layout]} onValueChange={(v) => v[0] && setLayout(v[0] as 'grid' | 'list')} className="mb-1 shrink-0" size="sm">
+            <ToggleGroupItem value="grid" aria-label={tr('Grid')}>
               <LayoutGrid />
             </ToggleGroupItem>
-            <ToggleGroupItem value="list" aria-label="List">
+            <ToggleGroupItem value="list" aria-label={tr('List')}>
               <List />
             </ToggleGroupItem>
           </ToggleGroup>
         </div>
 
         {!isLoading && items.length === 0 ? (
-          <EmptyState icon={FolderOpen} title={query ? 'No files match' : 'No files yet'} hint="Spreadsheets, scripts, decks and documents your agents produce appear here — and on the page they belong to." />
+          <EmptyState
+            icon={FolderOpen}
+            title={tr(query ? 'No files match' : 'No files yet')}
+            hint={tr('Spreadsheets, scripts, decks and documents your agents produce appear here — and on the page they belong to.')}
+          />
         ) : layout === 'grid' ? (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
             {items.map((o) => (
@@ -74,14 +84,20 @@ export function OutputsPage() {
                   <FileGlyph type={o.type} size={40} />
                   <div className="min-w-0 flex-1">
                     <AutoDir as="p" text={o.title} className="line-clamp-2 text-[14px] leading-snug font-medium" />
-                    <p className="mt-0.5 truncate text-[12px] text-ink-3">{o.fileName}</p>
+                    <p dir="auto" className="mt-0.5 truncate text-[12px] text-ink-3 ui-align">
+                      {o.fileName}
+                    </p>
                   </div>
                 </div>
                 {o.summary && <AutoDir as="p" text={o.summary} className="line-clamp-2 text-[12.5px] text-ink-2" />}
                 <div className="mt-auto flex items-end justify-between gap-3 text-[11.5px] whitespace-nowrap text-ink-3">
-                  <span className="truncate">
-                    {[fileMeta(o.type).label, bytes(o.sizeBytes), o.agent?.name].filter(Boolean).join(' · ')}
-                    {o.focus && <span className="block truncate">{o.focus.name}</span>}
+                  <span className="min-w-0 truncate">
+                    <Meta parts={[tr(fileMeta(o.type).label), bytes(o.sizeBytes), o.agent?.name]} />
+                    {o.focus && (
+                      <span dir="auto" className="block truncate ui-align">
+                        {o.focus.name}
+                      </span>
+                    )}
                   </span>
                   <span className="shrink-0">{ago(o.createdAt)}</span>
                 </div>
@@ -95,11 +111,19 @@ export function OutputsPage() {
                 <FileGlyph type={o.type} size={30} />
                 <div className="min-w-0 flex-1">
                   <AutoDir as="p" text={o.title} className="truncate text-[13.5px] font-medium" />
-                  <p className="truncate text-[11.5px] text-ink-3">{o.fileName}</p>
+                  <p dir="auto" className="truncate text-[11.5px] text-ink-3 ui-align">
+                    {o.fileName}
+                  </p>
                 </div>
-                <span className="hidden w-32 truncate text-[12px] text-ink-2 md:block">{o.focus?.name ?? '—'}</span>
-                <span className="hidden w-24 truncate text-[12px] text-ink-2 md:block">{o.agent?.name ?? '—'}</span>
-                <span className="num w-16 text-end text-[12px] text-ink-3">{bytes(o.sizeBytes)}</span>
+                <span dir="auto" className="hidden w-32 truncate text-[12px] text-ink-2 md:block ui-align">
+                  {o.focus?.name ?? '—'}
+                </span>
+                <span dir="auto" className="hidden w-24 truncate text-[12px] text-ink-2 md:block ui-align">
+                  {o.agent?.name ?? '—'}
+                </span>
+                <span className="num w-16 text-end text-[12px] text-ink-3" dir="ltr">
+                  {bytes(o.sizeBytes)}
+                </span>
                 <span className="w-20 text-end text-[12px] text-ink-3">{ago(o.createdAt)}</span>
               </button>
             ))}

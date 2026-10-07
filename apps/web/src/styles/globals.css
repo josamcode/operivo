@@ -190,10 +190,7 @@
     font-size: 14px;
     line-height: 1.5;
   }
-  :lang(ar),
-  [dir="rtl"] {
-    font-family: var(--font-arabic);
-  }
+    /* Latin glyphs come from Geist, Arabic from IBM Plex Sans Arabic (per-glyph fallback) in both directions. */
   ::selection {
     background: color-mix(in oklch, var(--brand) 22%, transparent);
   }
@@ -413,4 +410,40 @@ input[type="checkbox"]:checked::after {
 input[type="checkbox"]:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
+}
+
+/*
+ * Mixed-direction text. `.ui-align` aligns a block with the interface direction while the block
+ * itself keeps dir="auto" — so an English title in the Arabic UI sits on the right like its row,
+ * yet truncates at its own end (the start of the text stays visible).
+ */
+.ui-align {
+  text-align: left;
+}
+html[dir="rtl"] .ui-align {
+  text-align: right;
+}
+/* An empty auto-direction field shows its placeholder at the interface's reading start. */
+html[dir="rtl"] :is(input, textarea)[dir="auto"]:placeholder-shown {
+  direction: rtl;
+}
+/* Code, diffs, commands and paths always read left-to-right, even inside Arabic messages. */
+pre:not([dir]),
+code:not([dir]),
+kbd,
+.shiki-wrap {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+pre:not([dir]),
+.shiki-wrap {
+  text-align: left;
+}
+
+/* Sideways-scrolling rows (tab bars on a phone) without a visible scrollbar. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }

@@ -1,3 +1,4 @@
+import { t } from '@/lib/i18n';
 import { useParams } from '@tanstack/react-router';
 import { PencilLine } from 'lucide-react';
 import { TopBar } from '@/components/app/app-shell';
@@ -19,10 +20,10 @@ export function DynamicPage() {
 
   return (
     <>
-      <TopBar title={page ? <AutoDir text={page.title} /> : ''}>
+      <TopBar title={page?.title ?? ''}>
         {page && (
-          <Button size="sm" variant="ghost" onClick={() => askNoor(`On the ${page.title} page, `)}>
-            <PencilLine /> Change this page
+          <Button size="sm" variant="ghost" aria-label={t('Change this page')} onClick={() => askNoor(t('On the {title} page, ', { title: page.title }))}>
+            <PencilLine /> <span className="hidden sm:inline">{t('Change this page')}</span>
           </Button>
         )}
       </TopBar>
@@ -34,7 +35,7 @@ export function DynamicPage() {
             <Skeleton className="h-64 w-full" />
           </div>
         ) : error || !page ? (
-          <p className="text-[13.5px] text-ink-3">This page doesn’t exist anymore.</p>
+          <p className="text-[13.5px] text-ink-3">{t('This page doesn’t exist anymore.')}</p>
         ) : (
           <div className="space-y-6">
             <header className="space-y-2">
@@ -43,7 +44,7 @@ export function DynamicPage() {
                   <Icon className="size-[18px] text-ink-2" strokeWidth={1.75} />
                 </span>
                 <AutoDir as="h1" text={page.title} className="text-[26px] leading-tight font-semibold tracking-[-0.025em]" />
-                {page.focus && <Chip tone={page.focus.kind === 'main' ? 'info' : 'neutral'}>{KIND[page.focus.kind] ?? page.focus.kind}</Chip>}
+                {page.focus && <Chip tone={page.focus.kind === 'main' ? 'info' : 'neutral'}>{t(KIND[page.focus.kind] ?? page.focus.kind)}</Chip>}
               </div>
               {page.description && <AutoDir as="p" text={page.description} className="max-w-[72ch] text-[14px] text-ink-2" />}
             </header>

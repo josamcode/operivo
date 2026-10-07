@@ -2,6 +2,7 @@ import { createRootRoute, createRoute, createRouter, Outlet } from '@tanstack/re
 import type { DrawerSearch } from './components/app/ui-state';
 import { AppShell } from './components/app/app-shell';
 import { NoorMark } from './components/app/primitives';
+import { applyLanguage, lang } from './lib/i18n';
 import { useBootstrap } from './lib/queries';
 import { DynamicPage } from './pages/dynamic-page';
 import { HomePage } from './pages/home';
@@ -28,9 +29,11 @@ function Root() {
       </div>
     );
   }
+  // The interface follows the founder's language: Arabic → full right-to-left Egyptian Arabic UI.
+  applyLanguage(data.founder?.language === 'ar' ? 'ar' : 'en');
   if (!data.setupComplete) return <SetupPage />;
   return (
-    <AppShell>
+    <AppShell key={lang()}>
       <Outlet />
     </AppShell>
   );

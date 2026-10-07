@@ -1,6 +1,8 @@
+import { locale } from '@/lib/i18n';
 import type { FieldDef } from '@opervio/contracts';
 import { Check, ExternalLink, Minus } from 'lucide-react';
-import { formatNumber, isRtl } from '@/lib/format';
+import { formatNumber } from '@/lib/format';
+import { humanize } from './sections-shared';
 import { cn } from '@/lib/utils';
 import { Chip, Markdown, StatusPill } from '../app/primitives';
 
@@ -14,9 +16,7 @@ function StatusValue({ value, options }: { value: string; options?: string[] }) 
   const tone = idx < 0 || n < 2 ? 'neutral' : idx === n - 1 ? 'positive' : idx >= n / 2 ? 'info' : 'neutral';
   return (
     <Chip tone={tone} className="max-w-full">
-      <span className="truncate" dir="auto">
-        {value}
-      </span>
+      <span dir="auto" className="truncate ui-align">{humanize(value)}</span>
     </Chip>
   );
 }
@@ -70,16 +70,18 @@ export function FieldValue({ field, value, full = false }: { field: FieldDef | u
       if (Number.isNaN(d.getTime())) return <span>{String(value)}</span>;
       return (
         <span className="num whitespace-nowrap">
-          {d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', ...(d.getFullYear() !== new Date().getFullYear() ? { year: 'numeric' } : {}) })}
-          {type === 'datetime' ? ` ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
+          {d.toLocaleDateString(locale(), { month: 'short', day: 'numeric', ...(d.getFullYear() !== new Date().getFullYear() ? { year: 'numeric' } : {}) })}
+          {type === 'datetime' ? ` ${d.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })}` : ''}
         </span>
       );
     }
     case 'longtext':
-      return full ? <Markdown className="text-[13px]">{String(value)}</Markdown> : <span className={cn('line-clamp-2')} dir="auto">{String(value)}</span>;
+      return full ? <Markdown className="text-[13px]">{String(value)}</Markdown> : <span className={cn('line-clamp-2')}>
+          <bdi>{String(value)}</bdi>
+        </span>;
     default:
       return (
-        <span className={cn(!full && 'truncate')} dir={isRtl(String(value)) ? 'rtl' : undefined}>
+        <span dir="auto" className={cn('ui-align', !full && 'truncate')}>
           {String(value)}
         </span>
       );

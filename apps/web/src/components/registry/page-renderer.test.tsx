@@ -74,11 +74,11 @@ describe('dynamic page renderer', () => {
     expect(await screen.findByText('2')).toBeInTheDocument(); // computed KPI
 
     const pipeline = (await screen.findByText('Pipeline')).closest('section')!;
-    expect(within(pipeline).getByText('qualified')).toBeInTheDocument();
-    expect(within(pipeline).getByText('contacted')).toBeInTheDocument(); // empty column from field options
+    expect(within(pipeline).getByText('Qualified')).toBeInTheDocument(); // AI status keys read as labels
+    expect(within(pipeline).getByText('Contacted')).toBeInTheDocument(); // empty column from field options
     expect(within(pipeline).getAllByText('Acme Clinic').length).toBeGreaterThan(0);
 
-    const table = (await screen.findByText('Qualified')).closest('section')!;
+    const table = (await screen.findByRole('heading', { name: 'Qualified' })).closest('section')!;
     expect(await within(table).findAllByRole('row')).toHaveLength(3); // header + 2 rows (filtering is server-side)
     expect(within(table).getAllByText('acme.example').length).toBe(1);
 

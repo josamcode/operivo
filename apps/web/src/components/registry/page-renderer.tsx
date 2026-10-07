@@ -1,3 +1,4 @@
+import { endSide, t } from '@/lib/i18n';
 import type { LeafSection, PageDTO, Section } from '@opervio/contracts';
 import { Component, type ReactNode } from 'react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -6,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { AutoDir } from '../app/primitives';
 import { PageProvider, usePageCtx } from './context';
 import { FieldValue } from './field-value';
+import { fieldLabel } from './sections-shared';
 import { HeroSection, KpisSection, MarkdownSection, MetricSection, ProgressSection, SparklineSection } from './sections-basic';
 import { BarSection, FunnelSection, LineSection } from './sections-charts';
 import { CalendarSection, FiltersSection, KanbanSection, ListSection, TableSection, TimelineSection } from './sections-collections';
@@ -84,7 +86,7 @@ class SectionBoundary extends Component<{ children: ReactNode; label: string }, 
     return { error: err.message };
   }
   render() {
-    if (this.state.error) return <div className="rounded-xl border border-dashed border-border p-4 text-[12.5px] text-ink-3">This {this.props.label} section couldn’t render.</div>;
+    if (this.state.error) return <div className="rounded-xl border border-dashed border-border p-4 text-[12.5px] text-ink-3">{t('This {type} section couldn’t render.', { type: this.props.label })}</div>;
     return this.props.children;
   }
 }
@@ -124,21 +126,23 @@ function RecordDrawer() {
   const { record, closeRecord } = usePageCtx();
   return (
     <Sheet open={Boolean(record)} onOpenChange={(o) => !o && closeRecord()}>
-      <SheetContent side="right" resizable={{ id: 'record', defaultWidth: 520 }} className="w-full gap-0 bg-surface p-0 sm:max-w-[520px]">
+      <SheetContent side={endSide()} resizable={{ id: 'record', defaultWidth: 520 }} className="w-full gap-0 bg-surface p-0 sm:max-w-[520px]">
         {record && (
           <>
             <SheetHeader className="px-5 pt-5 pb-3">
               <SheetTitle className="pe-8 text-[16px] font-semibold">
-                <AutoDir text={String(record.row[record.titleField] ?? 'Record')} />
+                <AutoDir text={String(record.row[record.titleField] ?? t('Record'))} />
               </SheetTitle>
-              <SheetDescription className="text-[12px]">Details</SheetDescription>
+              <SheetDescription className="text-[12px]">{t('Details')}</SheetDescription>
             </SheetHeader>
             <dl className="min-h-0 flex-1 divide-y divide-border overflow-y-auto border-t border-border">
               {record.fields
                 .filter((f) => f.key !== record.titleField)
                 .map((f) => (
                   <div key={f.key} className={cn('grid gap-1 px-5 py-3', f.type === 'longtext' ? 'grid-cols-1' : 'grid-cols-[140px_1fr] items-start')}>
-                    <dt className="text-[12px] text-ink-3">{f.label}</dt>
+                    <dt className="text-[12px] text-ink-3">
+                      <bdi>{fieldLabel(f, f.key)}</bdi>
+                    </dt>
                     <dd className="min-w-0 text-[13px]">
                       <FieldValue field={f} value={record.row[f.key]} full />
                     </dd>
@@ -154,7 +158,7 @@ function RecordDrawer() {
 
 export function PageRenderer({ page }: { page: PageDTO }) {
   return (
-    <PageProvider focusId={page.focus?.id ?? null}>
+    <PageProvider focusId={page.focus?.id ?? null} pageTitle={page.title}>
       <SectionGrid sections={page.spec.sections} />
       <RecordDrawer />
     </PageProvider>
