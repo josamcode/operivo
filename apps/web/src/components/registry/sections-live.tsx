@@ -1,11 +1,10 @@
-import { t, trActivity } from '@/lib/i18n';
 import type { SectionOf } from '@opervio/contracts';
 import { EFFORT_LABEL } from '@opervio/contracts';
 import { useMemo } from 'react';
-import { ago } from '@/lib/format';
+import { ago, plural } from '@/lib/format';
 import { useAgents, useData, useDecisions, useOutputs } from '@/lib/queries';
 import { cn } from '@/lib/utils';
-import { AgentAvatar, AutoDir, FileGlyph, fileMeta, Meta, ProgressBar, StatusPill } from '../app/primitives';
+import { AgentAvatar, AutoDir, FileGlyph, fileMeta, ProgressBar, StatusPill } from '../app/primitives';
 import { useDrawers } from '../app/ui-state';
 import { usePageCtx } from './context';
 import { Frame } from './sections-basic';
@@ -17,7 +16,7 @@ export function AgentsSection({ s }: { s: SectionOf<'agents'> }) {
   const { openAgent } = useDrawers();
   const agents = useMemo(() => (s.scope === 'all' || !focusId ? all : all.filter((a) => a.focus?.id === focusId)), [all, focusId, s.scope]);
   return (
-    <Frame title={s.title ?? t('Team')} description={s.description} bare>
+    <Frame title={s.title ?? 'Team'} description={s.description} bare>
       {agents.length === 0 ? (
         <div className="px-4 pb-4">
           <Empty text="No specialists on this yet. Noor brings them in when they help." />
@@ -32,26 +31,26 @@ export function AgentsSection({ s }: { s: SectionOf<'agents'> }) {
                 <AgentAvatar name={a.name} size={30} working={working} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <bdi className="text-[13.5px] font-medium">{a.name}</bdi>
-                    <span dir="auto" className="truncate text-[12px] text-ink-3 ui-align">{a.role}</span>
+                    <span className="text-[13.5px] font-medium">{a.name}</span>
+                    <span className="truncate text-[12px] text-ink-3">{a.role}</span>
                     <span className="ms-auto">
                       <StatusPill status={a.status} />
                     </span>
                   </div>
-                  {a.task && <AutoDir as="p" text={working && a.run?.lastActivity ? trActivity(a.run.lastActivity) : a.task.title} className="mt-0.5 truncate text-[12.5px] text-ink-2" />}
+                  {a.task && <AutoDir as="p" text={working && a.run?.lastActivity ? a.run.lastActivity : a.task.title} className="mt-0.5 truncate text-[12.5px] text-ink-2" />}
                   {working && p?.total ? (
                     <div className="mt-1.5 flex items-center gap-2">
                       <ProgressBar value={p.current ?? 0} max={p.total} />
-                      <span className="num shrink-0 text-[11.5px] text-ink-3" dir="ltr">
+                      <span className="num shrink-0 text-[11.5px] text-ink-3">
                         {p.current ?? 0}/{p.total}
                       </span>
                     </div>
                   ) : null}
                   {a.run && (
-                    <Meta
-                      className="mt-0.5 block text-[11.5px] text-ink-3"
-                      parts={[a.run.provider === 'claude' ? 'Claude' : 'Codex', t(EFFORT_LABEL[a.run.effort]), a.stats.outputs ? t(a.stats.outputs === 1 ? '{n} output' : '{n} outputs', { n: a.stats.outputs }) : null]}
-                    />
+                    <p className="mt-0.5 text-[11.5px] text-ink-3">
+                      {a.run.provider === 'claude' ? 'Claude' : 'Codex'} · {EFFORT_LABEL[a.run.effort]}
+                      {a.stats.outputs ? ` · ${plural(a.stats.outputs, 'output')}` : ''}
+                    </p>
                   )}
                 </div>
               </button>
@@ -69,7 +68,7 @@ export function ActivitySection({ s }: { s: SectionOf<'activity'> }) {
   const { data } = useData({ kind: 'activity', scope: s.scope, limit: s.limit ?? 12 }, focusId);
   const rows = data?.rows ?? [];
   return (
-    <Frame title={s.title ?? t('Activity')} description={s.description}>
+    <Frame title={s.title ?? 'Activity'} description={s.description}>
       {rows.length === 0 ? (
         <Empty text="Activity shows up here while agents work." />
       ) : (
@@ -79,8 +78,10 @@ export function ActivitySection({ s }: { s: SectionOf<'activity'> }) {
               <button type="button" onClick={() => typeof r.agentId === 'string' && openAgent(r.agentId)} className="flex w-full items-start gap-2.5 text-start">
                 <AgentAvatar name={String(r.agent)} size={20} />
                 <div className="min-w-0 flex-1">
-                  <AutoDir as="p" text={trActivity(String(r.label))} className="text-[12.5px] leading-snug" />
-                  <Meta className="block text-[11px] text-ink-3" parts={[String(r.agent), ago(String(r.ts))]} />
+                  <AutoDir as="p" text={String(r.label)} className="text-[12.5px] leading-snug" />
+                  <p className="text-[11px] text-ink-3">
+                    {String(r.agent)} · {ago(String(r.ts))}
+                  </p>
                 </div>
               </button>
             </li>
@@ -97,7 +98,7 @@ export function DecisionsSection({ s }: { s: SectionOf<'decisions'> }) {
   const { openDecision } = useDrawers();
   const items = all.filter((d) => d.kind !== 'plan' && (s.scope === 'all' || !focusId || d.focus?.id === focusId));
   return (
-    <Frame title={s.title ?? t('Needs you')} description={s.description} bare>
+    <Frame title={s.title ?? 'Needs you'} description={s.description} bare>
       {items.length === 0 ? (
         <div className="px-4 pb-4">
           <Empty text="Nothing needs you here." />
@@ -126,7 +127,7 @@ export function OutputsSection({ s }: { s: SectionOf<'outputs'> }) {
   const items = all.filter((o) => !s.types || s.types.includes(o.type)).slice(0, s.limit ?? 12);
   const grid = (s.layout ?? 'grid') === 'grid';
   return (
-    <Frame title={s.title ?? t('Outputs')} description={s.description} bare={!grid}>
+    <Frame title={s.title ?? 'Outputs'} description={s.description} bare={!grid}>
       {items.length === 0 ? (
         <div className={cn(!grid && 'px-4 pb-4')}>
           <Empty text="Files your team produces for this area show up here." />
@@ -139,7 +140,10 @@ export function OutputsSection({ s }: { s: SectionOf<'outputs'> }) {
               <FileGlyph type={o.type} size={34} className="bg-surface" />
               <div className="min-w-0">
                 <AutoDir as="p" text={o.title} className="truncate text-[13px] font-medium" />
-                <Meta className="block truncate text-[11.5px] text-ink-3" parts={[t(fileMeta(o.type).label), o.agent?.name, ago(o.createdAt)]} />
+                <p className="truncate text-[11.5px] text-ink-3">
+                  {fileMeta(o.type).label}
+                  {o.agent ? ` · ${o.agent.name}` : ''} · {ago(o.createdAt)}
+                </p>
               </div>
             </button>
           ))}

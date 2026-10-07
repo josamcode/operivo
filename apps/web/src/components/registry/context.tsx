@@ -6,7 +6,6 @@ type Filters = Record<string, Record<string, string>>; // collection â†’ field â
 
 interface PageCtx {
   focusId: string | null;
-  pageTitle: string;
   filters: Filters;
   setFilter: (collection: string, field: string, value: string | null) => void;
   openRow: (row: DataRow, fields: FieldDef[], titleField: string) => void;
@@ -16,7 +15,7 @@ interface PageCtx {
 
 const Ctx = createContext<PageCtx | null>(null);
 
-export function PageProvider({ focusId, pageTitle = '', children }: { focusId: string | null; pageTitle?: string; children: ReactNode }) {
+export function PageProvider({ focusId, children }: { focusId: string | null; children: ReactNode }) {
   const [filters, setFilters] = useState<Filters>({});
   const [record, setRecord] = useState<PageCtx['record']>(null);
   const { openAgent, openOutput, openDecision } = useDrawers();
@@ -55,7 +54,7 @@ export function PageProvider({ focusId, pageTitle = '', children }: { focusId: s
     [openAgent, openOutput, openDecision],
   );
 
-  const value = useMemo(() => ({ focusId, pageTitle, filters, setFilter, openRow, record, closeRecord: () => setRecord(null) }), [focusId, pageTitle, filters, setFilter, openRow, record]);
+  const value = useMemo(() => ({ focusId, filters, setFilter, openRow, record, closeRecord: () => setRecord(null) }), [focusId, filters, setFilter, openRow, record]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 

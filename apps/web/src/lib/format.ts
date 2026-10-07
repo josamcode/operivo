@@ -1,12 +1,11 @@
 import { formatDistanceToNowStrict } from 'date-fns';
-import { dateFnsLocale, locale, t } from './i18n';
 
 export const ago = (iso: string | null | undefined) => {
   if (!iso) return '';
   const d = new Date(iso);
   const s = (Date.now() - d.getTime()) / 1000;
-  if (s < 45) return t('just now');
-  return formatDistanceToNowStrict(d, { addSuffix: true, locale: dateFnsLocale() });
+  if (s < 45) return 'just now';
+  return `${formatDistanceToNowStrict(d)} ago`;
 };
 
 export function elapsed(fromIso: string, toIso?: string | null) {
@@ -21,10 +20,6 @@ export function elapsed(fromIso: string, toIso?: string | null) {
 }
 
 export const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
-
-/** Short date/time in the interface language (Western digits in both). */
-export const shortDate = (d: Date, opts: Intl.DateTimeFormatOptions) => d.toLocaleDateString(locale(), opts);
-export const shortTime = (d: Date, opts: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit' }) => d.toLocaleTimeString(locale(), opts);
 
 export function bytes(n: number) {
   if (n < 1024) return `${n} B`;
@@ -42,13 +37,13 @@ export function formatNumber(v: unknown, format?: 'number' | 'percent' | 'curren
       out = `${(n <= 1 && n >= -1 ? n * 100 : n).toFixed(0)}%`;
       break;
     case 'currency':
-      out = n.toLocaleString(locale(), { maximumFractionDigits: 0 });
+      out = n.toLocaleString(undefined, { maximumFractionDigits: 0 });
       break;
     case 'duration':
       out = n >= 60 ? `${Math.floor(n / 60)}h ${Math.round(n % 60)}m` : `${Math.round(n)}m`;
       break;
     default:
-      out = Number.isInteger(n) ? n.toLocaleString(locale()) : n.toLocaleString(locale(), { maximumFractionDigits: 1 });
+      out = Number.isInteger(n) ? n.toLocaleString() : n.toLocaleString(undefined, { maximumFractionDigits: 1 });
   }
   return unit ? `${out} ${unit}` : out;
 }

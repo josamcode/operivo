@@ -1,4 +1,3 @@
-import { isRtlUi, locale, t, trActivity } from '@/lib/i18n';
 import type { AgentDTO, FocusSummaryDTO, HomeDTO } from '@opervio/contracts';
 import { EFFORT_LABEL } from '@opervio/contracts';
 import { useQueryClient } from '@tanstack/react-query';
@@ -8,12 +7,12 @@ import { useCallback, useState } from 'react';
 import { axisBase, EChart, tooltipBase, type ChartTheme } from '@/components/app/chart';
 import { TopBar } from '@/components/app/app-shell';
 import { pageIcon } from '@/components/app/page-icon';
-import { AgentAvatar, AutoDir, Chip, EmptyState, FileGlyph, Meta, NoorMark, Panel, PanelHeader, ProgressBar, StatusPill } from '@/components/app/primitives';
+import { AgentAvatar, AutoDir, Chip, EmptyState, FileGlyph, NoorMark, Panel, PanelHeader, ProgressBar, StatusPill } from '@/components/app/primitives';
 import { useDrawers, useUi } from '@/components/app/ui-state';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '@/lib/api';
-import { ago, greeting } from '@/lib/format';
+import { ago, greeting, isRtl, plural } from '@/lib/format';
 import { useHome, useSendToNoor } from '@/lib/queries';
 import { cn } from '@/lib/utils';
 
@@ -35,10 +34,10 @@ function AskBar({ lang }: { lang: 'ar' | 'en' }) {
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && submit()}
-        placeholder={t('Tell Noor what you need…')}
+        placeholder={lang === 'ar' ? 'قول لنور محتاج إيه…' : 'Tell Noor what you need…'}
         className="h-9 min-w-0 flex-1 bg-transparent text-[14.5px] outline-none placeholder:text-ink-3"
       />
-      <Button size="icon" className="rounded-xl" disabled={!text.trim()} onClick={submit} aria-label={t('Send to Noor')}>
+      <Button size="icon" className="rounded-xl" disabled={!text.trim()} onClick={submit} aria-label="Send to Noor">
         <ArrowUp />
       </Button>
     </div>
@@ -57,37 +56,29 @@ function Today({ home }: { home: HomeDTO }) {
   const left = today.items.filter((i) => !i.done).length;
   return (
     <Panel className="lg:col-span-5">
-      <PanelHeader title={t('Today')} meta={today.items.length ? t('{n} left', { n: left }) : undefined} />
+      <PanelHeader title="Today" meta={today.items.length ? `${left} left` : undefined} />
       {today.items.length === 0 ? (
         <EmptyState
           icon={CheckCircle2}
-          title={t('Nothing on your plate yet')}
-          hint={t('Noor fills this with only what you personally need to do.')}
+          title="Nothing on your plate yet"
+          hint="Noor fills this with only what you personally need to do."
           action={
             <Button size="sm" variant="outline" onClick={() => askNoor(ar ? 'رتبلي يومي النهارده' : 'Plan my day')}>
-              {t('Plan my day')}
+              Plan my day
             </Button>
           }
         />
       ) : (
         <div className="px-2 pb-3">
-          {today.note && <AutoDir as="p" block text={today.note} className="px-2 pb-2 text-[13px] text-ink-2" />}
+          {today.note && <AutoDir as="p" text={today.note} className="px-2 pb-2 text-[13px] text-ink-2" />}
           <ul>
             {today.items.map((i) => (
               <li key={i.id}>
-                <label className="flex cursor-pointer items-start gap-3 rounded-lg px-2 py-2 hover:bg-muted/60">
+                <label className="flex cursor-pointer items-start gap-3 rounded-lg px-2 py-2 hover:bg-muted/60" dir={isRtl(i.title) ? 'rtl' : undefined}>
                   <input type="checkbox" checked={i.done} onChange={(e) => void toggle(i.id, e.target.checked)} className="mt-0.5 size-4 shrink-0 accent-[var(--brand)]" />
-                  <span className={cn('flex-1 text-[14px] leading-snug', i.done && 'text-ink-3 line-through decoration-ink-4')}>
-                    <bdi>{i.title}</bdi>
-                  </span>
-                  {i.minutes ? (
-                    <span className="num shrink-0 text-[12px] text-ink-3">{t('{n}m', { n: i.minutes })}</span>
-                  ) : null}
-                  {i.focus && (
-                    <Chip className="shrink-0">
-                      <bdi>{i.focus.name}</bdi>
-                    </Chip>
-                  )}
+                  <span className={cn('flex-1 text-[14px] leading-snug', i.done && 'text-ink-3 line-through decoration-ink-4')}>{i.title}</span>
+                  {i.minutes ? <span className="num shrink-0 text-[12px] text-ink-3">{i.minutes}m</span> : null}
+                  {i.focus && <Chip className="shrink-0">{i.focus.name}</Chip>}
                 </label>
               </li>
             ))}
@@ -107,19 +98,17 @@ function AgentRow({ a }: { a: AgentDTO }) {
       <AgentAvatar name={a.name} size={32} working={working} />
       <div className="min-w-0 flex-1 space-y-1">
         <div className="flex items-center gap-2">
-          <bdi className="text-[13.5px] font-medium">{a.name}</bdi>
-          <span dir="auto" className="truncate text-[12.5px] text-ink-3 ui-align">{a.role}</span>
-          <span className="ms-auto shrink-0">{working ? p?.total ? <span className="num text-[12.5px] font-medium" dir="ltr">
-                {p.current ?? 0}/{p.total}
-              </span> : null : <StatusPill status={a.status} />}</span>
+          <span className="text-[13.5px] font-medium">{a.name}</span>
+          <span className="truncate text-[12.5px] text-ink-3">{a.role}</span>
+          <span className="ms-auto shrink-0">{working ? p?.total ? <span className="num text-[12.5px] font-medium">{p.current ?? 0}/{p.total}</span> : null : <StatusPill status={a.status} />}</span>
         </div>
-        {a.task && <AutoDir as="p" text={working && a.run?.lastActivity ? trActivity(a.run.lastActivity) : a.task.title} className={cn('truncate text-[12.5px]', working ? 'text-foreground' : 'text-ink-2')} />}
+        {a.task && <AutoDir as="p" text={working && a.run?.lastActivity ? a.run.lastActivity : a.task.title} className={cn('truncate text-[12.5px]', working ? 'text-foreground' : 'text-ink-2')} />}
         {working && p?.total ? <ProgressBar value={p.current ?? 0} max={p.total} className="mt-1.5" /> : null}
         {a.run && (
-          <Meta
-            className="block text-[11.5px] text-ink-3"
-            parts={[a.run.provider === 'claude' ? 'Claude' : 'Codex', t(EFFORT_LABEL[a.run.effort]), !working && a.run.finishedAt ? ago(a.run.finishedAt) : null]}
-          />
+          <p className="text-[11.5px] text-ink-3">
+            {a.run.provider === 'claude' ? 'Claude' : 'Codex'} · {EFFORT_LABEL[a.run.effort]}
+            {!working && a.run.finishedAt ? ` · ${ago(a.run.finishedAt)}` : ''}
+          </p>
         )}
       </div>
     </button>
@@ -130,15 +119,15 @@ function LiveAgents({ home }: { home: HomeDTO }) {
   const { askNoor } = useUi();
   return (
     <Panel className="lg:col-span-7">
-      <PanelHeader title={t('Team')} meta={home.counts.activeAgents ? t('{n} working', { n: home.counts.activeAgents }) : undefined} />
+      <PanelHeader title="Team" meta={home.counts.activeAgents ? `${home.counts.activeAgents} working` : undefined} />
       {home.agents.length === 0 ? (
         <EmptyState
           icon={Users}
-          title={t('No one is working yet')}
-          hint={t('Tell Noor what you need. She brings in specialists — researchers, writers, engineers — only when they help.')}
+          title="No one is working yet"
+          hint="Tell Noor what you need. She brings in specialists — researchers, writers, engineers — only when they help."
           action={
             <Button size="sm" variant="outline" onClick={() => askNoor()}>
-              {t('Talk to Noor')}
+              Talk to Noor
             </Button>
           }
         />
@@ -160,7 +149,7 @@ function FocusTile({ f }: { f: FocusSummaryDTO }) {
       <div className="flex items-center gap-2">
         <Icon className="size-4 text-ink-2" strokeWidth={1.75} />
         <AutoDir text={f.name} className="truncate text-[14px] font-semibold tracking-[-0.01em]" />
-        {f.kind === 'main' && <Chip tone="info">{t('Priority')}</Chip>}
+        {f.kind === 'main' && <Chip tone="info">Priority</Chip>}
         {f.activeAgents > 0 && <span className="live-dot ms-auto size-1.5 rounded-full bg-positive" />}
       </div>
       {f.headline.length > 0 ? (
@@ -176,13 +165,7 @@ function FocusTile({ f }: { f: FocusSummaryDTO }) {
         <AutoDir as="p" text={f.why} className="line-clamp-2 text-[12.5px] text-ink-2" />
       )}
       <p className="mt-auto text-[11.5px] text-ink-3">
-        {[
-          f.activeAgents ? t('{n} working', { n: f.activeAgents }) : null,
-          f.doneTasks ? t('{n} done', { n: f.doneTasks }) : null,
-          f.outputs ? t(f.outputs === 1 ? '{n} output' : '{n} outputs', { n: f.outputs }) : null,
-        ]
-          .filter(Boolean)
-          .join(' · ') || t('Getting started')}
+        {[f.activeAgents ? `${f.activeAgents} working` : null, f.doneTasks ? `${f.doneTasks} done` : null, f.outputs ? plural(f.outputs, 'output') : null].filter(Boolean).join(' · ') || 'Getting started'}
       </p>
     </div>
   );
@@ -199,17 +182,9 @@ function Focuses({ home }: { home: HomeDTO }) {
   const { askNoor } = useUi();
   return (
     <Panel className="overflow-hidden lg:col-span-8">
-      <PanelHeader title={t('Focuses')} />
+      <PanelHeader title="Focuses" />
       {home.focuses.length === 0 ? (
-        <EmptyState
-          title={t('No focuses yet')}
-          hint={t('Once you and Noor agree on what matters, each area gets its own page here.')}
-          action={
-            <Button size="sm" variant="outline" onClick={() => askNoor()}>
-              {t('Talk to Noor')}
-            </Button>
-          }
-        />
+        <EmptyState title="No focuses yet" hint="Once you and Noor agree on what matters, each area gets its own page here." action={<Button size="sm" variant="outline" onClick={() => askNoor()}>Talk to Noor</Button>} />
       ) : (
         <div className="grid grid-cols-1 gap-px border-t border-border bg-border sm:grid-cols-2">
           {home.focuses.map((f) => (
@@ -228,9 +203,9 @@ function NeedsYou({ home }: { home: HomeDTO }) {
   const { openDecision } = useDrawers();
   return (
     <Panel className="lg:col-span-4">
-      <PanelHeader title={t('Needs you')} meta={home.decisions.length || undefined} />
+      <PanelHeader title="Needs you" meta={home.decisions.length || undefined} />
       {home.decisions.length === 0 ? (
-        <p className="px-4 pb-4 text-[13px] text-ink-3">{t('Nothing needs you right now.')}</p>
+        <p className="px-4 pb-4 text-[13px] text-ink-3">Nothing needs you right now.</p>
       ) : (
         <div className="px-2 pb-2">
           {home.decisions.map((d) => (
@@ -240,7 +215,10 @@ function NeedsYou({ home }: { home: HomeDTO }) {
                 <AutoDir text={d.title} className="truncate text-[13.5px] font-medium" />
               </span>
               {d.recommendation && <AutoDir as="p" text={d.recommendation} className="line-clamp-2 ps-3.5 text-[12.5px] text-ink-2" />}
-              <Meta className="ps-3.5 text-[11.5px] text-ink-3" parts={[d.agent?.name, ago(d.createdAt)]} />
+              <span className="ps-3.5 text-[11.5px] text-ink-3">
+                {d.agent ? `${d.agent.name} · ` : ''}
+                {ago(d.createdAt)}
+              </span>
             </button>
           ))}
         </div>
@@ -254,15 +232,15 @@ function RecentOutputs({ home }: { home: HomeDTO }) {
   return (
     <Panel className="lg:col-span-7">
       <PanelHeader
-        title={t('Recent outputs')}
+        title="Recent outputs"
         actions={
           <Link to="/outputs" className="rounded-md px-2 py-1 text-[12.5px] text-ink-3 hover:bg-muted hover:text-foreground">
-            {t('All outputs')}
+            All outputs
           </Link>
         }
       />
       {home.outputs.length === 0 ? (
-        <EmptyState icon={FolderOpen} title={t('No files yet')} hint={t('Spreadsheets, scripts, decks and documents your team produces land here.')} />
+        <EmptyState icon={FolderOpen} title="No files yet" hint="Spreadsheets, scripts, decks and documents your team produces land here." />
       ) : (
         <div className="px-2 pb-2">
           {home.outputs.slice(0, 6).map((o) => (
@@ -270,7 +248,11 @@ function RecentOutputs({ home }: { home: HomeDTO }) {
               <FileGlyph type={o.type} size={30} />
               <div className="min-w-0 flex-1">
                 <AutoDir as="p" text={o.title} className="truncate text-[13.5px] font-medium" />
-                <Meta className="block truncate text-[11.5px] text-ink-3" parts={[o.fileName, o.agent?.name, o.focus?.name]} />
+                <p className="truncate text-[11.5px] text-ink-3">
+                  {o.fileName}
+                  {o.agent ? ` · ${o.agent.name}` : ''}
+                  {o.focus ? ` · ${o.focus.name}` : ''}
+                </p>
               </div>
               <span className="shrink-0 text-[11.5px] text-ink-3">{ago(o.createdAt)}</span>
             </button>
@@ -285,28 +267,28 @@ function Progress({ home }: { home: HomeDTO }) {
   const days = home.progress;
   const hasData = days.some((d) => d.tasksDone || d.outputs);
   const option = useCallback(
-    (th: ChartTheme) => ({
+    (t: ChartTheme) => ({
       grid: { left: 4, right: 4, top: 30, bottom: 4, containLabel: true },
-      legend: { top: 0, ...(isRtlUi() ? { right: 0 } : { left: 0 }), itemWidth: 10, itemHeight: 10, icon: 'roundRect', textStyle: { color: th.ink2, fontSize: 11.5 } },
-      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow', shadowStyle: { color: th.grid, opacity: 0.6 } }, ...tooltipBase(th) },
-      xAxis: { type: 'category', data: days.map((d) => d.date.slice(5)), ...axisBase(th), splitLine: { show: false }, axisLabel: { ...axisBase(th).axisLabel, interval: 2 } },
-      yAxis: { type: 'value', minInterval: 1, ...axisBase(th) },
+      legend: { top: 0, left: 0, itemWidth: 10, itemHeight: 10, icon: 'roundRect', textStyle: { color: t.ink2, fontSize: 11.5 } },
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow', shadowStyle: { color: t.grid, opacity: 0.6 } }, ...tooltipBase(t) },
+      xAxis: { type: 'category', data: days.map((d) => d.date.slice(5)), ...axisBase(t), splitLine: { show: false }, axisLabel: { ...axisBase(t).axisLabel, interval: 2 } },
+      yAxis: { type: 'value', minInterval: 1, ...axisBase(t) },
       series: [
-        { name: t('Tasks done'), type: 'bar', data: days.map((d) => d.tasksDone), itemStyle: { color: th.series[0], borderRadius: [4, 4, 0, 0] }, barGap: '15%', barMaxWidth: 12 },
-        { name: t('Outputs'), type: 'bar', data: days.map((d) => d.outputs), itemStyle: { color: th.series[1], borderRadius: [4, 4, 0, 0] }, barMaxWidth: 12 },
+        { name: 'Tasks done', type: 'bar', data: days.map((d) => d.tasksDone), itemStyle: { color: t.series[0], borderRadius: [4, 4, 0, 0] }, barGap: '15%', barMaxWidth: 12 },
+        { name: 'Outputs', type: 'bar', data: days.map((d) => d.outputs), itemStyle: { color: t.series[1], borderRadius: [4, 4, 0, 0] }, barMaxWidth: 12 },
       ],
     }),
     [days],
   );
   return (
     <Panel className="lg:col-span-5">
-      <PanelHeader title={t('Progress')} meta={t('last 14 days')} />
+      <PanelHeader title="Progress" meta="last 14 days" />
       {hasData ? (
         <div className="px-4 pb-3">
           <EChart option={option} height={190} />
         </div>
       ) : (
-        <p className="px-4 pb-4 text-[13px] text-ink-3">{t('Shows real completed work and outputs as they happen — nothing to chart yet.')}</p>
+        <p className="px-4 pb-4 text-[13px] text-ink-3">Shows real completed work and outputs as they happen — nothing to chart yet.</p>
       )}
     </Panel>
   );
@@ -316,7 +298,7 @@ export function HomePage() {
   const { data: home, isLoading } = useHome();
   return (
     <>
-      <TopBar title={t('Home')} />
+      <TopBar title="Home" />
       <div className="mx-auto w-full max-w-[1320px] space-y-6 px-4 py-8 lg:px-8">
         {isLoading || !home ? (
           <div className="space-y-4">
@@ -329,15 +311,15 @@ export function HomePage() {
           </div>
         ) : (
           <>
-            <header className="space-y-1">
-              <h1 className="text-[28px] leading-tight font-semibold tracking-[-0.025em]">
+            <header className="space-y-1" dir={home.founder.language === 'ar' ? 'rtl' : undefined}>
+              <h1 dir="auto" className="text-[28px] leading-tight font-semibold tracking-[-0.025em]">
                 {greeting(home.founder.language, home.founder.name)}
               </h1>
               <p className="num text-[13.5px] text-ink-2">
-                {new Date().toLocaleDateString(locale(), { weekday: 'long', month: 'long', day: 'numeric' })}
-                {home.counts.activeAgents ? ` · ${t('{n} working now', { n: home.counts.activeAgents })}` : ''}
-                {home.counts.tasksDoneThisWeek ? ` · ${t('{n} done this week', { n: home.counts.tasksDoneThisWeek })}` : ''}
-                {home.counts.outputsThisWeek ? ` · ${t(home.counts.outputsThisWeek === 1 ? '{n} new file' : '{n} new files', { n: home.counts.outputsThisWeek })}` : ''}
+                {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+                {home.counts.activeAgents ? ` · ${home.counts.activeAgents} working now` : ''}
+                {home.counts.tasksDoneThisWeek ? ` · ${home.counts.tasksDoneThisWeek} done this week` : ''}
+                {home.counts.outputsThisWeek ? ` · ${plural(home.counts.outputsThisWeek, 'new file')}` : ''}
               </p>
             </header>
             <AskBar lang={home.founder.language} />

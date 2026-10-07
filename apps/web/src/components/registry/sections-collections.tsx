@@ -1,4 +1,3 @@
-import { locale, t } from '@/lib/i18n';
 import type { DataResult, DataRow, FieldDef, SectionOf } from '@opervio/contracts';
 import { DndContext, PointerSensor, useDraggable, useDroppable, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { useQueryClient } from '@tanstack/react-query';
@@ -27,7 +26,7 @@ import { SimpleSelect } from '../app/simple-select';
 import { useFiltered, usePageCtx } from './context';
 import { FieldValue } from './field-value';
 import { Frame } from './sections-basic';
-import { collectionOf, Empty, fieldLabel, humanize } from './sections-shared';
+import { collectionOf, Empty } from './sections-shared';
 
 const features = tableFeatures({
   rowSortingFeature,
@@ -73,7 +72,7 @@ function FilterChips({ fields, rows, collection }: { fields: FieldDef[]; rows: D
             ariaLabel={f.label}
             value={filters[collection]?.[f.key] ?? '__all'}
             onChange={(v) => setFilter(collection, f.key, v === '__all' ? null : v)}
-            options={[{ value: '__all', label: t('{label}: all', { label: fieldLabel(f, f.key) }) }, ...ordered.map((v) => ({ value: v, label: `${fieldLabel(f, f.key)}: ${humanize(v)}` }))]}
+            options={[{ value: '__all', label: `${f.label}: all` }, ...ordered.map((v) => ({ value: v, label: `${f.label}: ${v}` }))]}
           />
         );
       })}
@@ -120,7 +119,7 @@ export function TableSection({ s }: { s: SectionOf<'table'> }) {
           {s.searchable && (
             <label className="flex h-7 items-center gap-1.5 rounded-md border border-input px-2 text-[12.5px]">
               <Search className="size-3.5 text-ink-3" />
-              <input dir="auto" placeholder={t('Search')} className="w-36 bg-transparent outline-none" onChange={(e) => table.setGlobalFilter(e.target.value)} />
+              <input dir="auto" placeholder="Search" className="w-36 bg-transparent outline-none" onChange={(e) => table.setGlobalFilter(e.target.value)} />
             </label>
           )}
           {collection && filterFields.length > 0 && <FilterChips fields={filterFields} rows={data?.rows ?? []} collection={collection} />}
@@ -146,7 +145,7 @@ export function TableSection({ s }: { s: SectionOf<'table'> }) {
                       return (
                         <th key={h.id} className="border-b border-border bg-surface-2 px-4 py-2 text-start text-[12px] font-medium whitespace-nowrap text-ink-3">
                           <button type="button" onClick={h.column.getToggleSortingHandler()} className="inline-flex items-center gap-1 hover:text-foreground">
-                            <bdi>{humanize(String(h.column.columnDef.header))}</bdi>
+                            {String(h.column.columnDef.header)}
                             {sorted === 'asc' ? <ArrowUp className="size-3" /> : sorted === 'desc' ? <ArrowDown className="size-3" /> : null}
                           </button>
                         </th>
@@ -173,11 +172,11 @@ export function TableSection({ s }: { s: SectionOf<'table'> }) {
               <span className="num">
                 {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}
               </span>
-              <button type="button" className="grid size-6 place-items-center rounded hover:bg-muted disabled:opacity-40" disabled={!table.getCanPreviousPage()} onClick={() => table.previousPage()} aria-label={t('Previous page')}>
-                <ChevronLeft className="size-3.5 rtl:-scale-x-100" />
+              <button type="button" className="grid size-6 place-items-center rounded hover:bg-muted disabled:opacity-40" disabled={!table.getCanPreviousPage()} onClick={() => table.previousPage()} aria-label="Previous page">
+                <ChevronLeft className="size-3.5" />
               </button>
-              <button type="button" className="grid size-6 place-items-center rounded hover:bg-muted disabled:opacity-40" disabled={!table.getCanNextPage()} onClick={() => table.nextPage()} aria-label={t('Next page')}>
-                <ChevronRight className="size-3.5 rtl:-scale-x-100" />
+              <button type="button" className="grid size-6 place-items-center rounded hover:bg-muted disabled:opacity-40" disabled={!table.getCanNextPage()} onClick={() => table.nextPage()} aria-label="Next page">
+                <ChevronRight className="size-3.5" />
               </button>
             </div>
           )}
@@ -217,17 +216,11 @@ function KanbanCard({ row, data, s, draggable }: { row: DataRow; data: DataResul
       <AutoDir as="p" text={titleOf(row, data, s.cardTitle)} className="line-clamp-2 text-[13px] font-medium" />
       {extra.length > 0 && (
         <div className="mt-1.5 space-y-1 text-[12px] text-ink-2">
-          {extra.map((k) => {
-            const f = fm.get(k);
-            const numeric = f && ['number', 'currency', 'percent'].includes(f.type);
-            return (
-              <div key={k} className="flex min-w-0 items-center gap-1.5">
-                {/* A bare "8" means nothing on a card — numbers carry their label. */}
-                {numeric && <span className="text-ink-3">{fieldLabel(f, k)}</span>}
-                <FieldValue field={f} value={row[k]} />
-              </div>
-            );
-          })}
+          {extra.map((k) => (
+            <div key={k} className="flex min-w-0 items-center gap-1.5">
+              <FieldValue field={fm.get(k)} value={row[k]} />
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -239,7 +232,7 @@ function KanbanColumn({ id, label, count, children }: { id: string; label: strin
   return (
     <div ref={setNodeRef} className={cn('flex w-64 shrink-0 flex-col gap-2 rounded-xl bg-sunken/60 p-2 transition-colors', isOver && 'bg-brand-soft')}>
       <div className="flex items-center gap-2 px-1 pt-0.5 text-[12.5px]">
-        <AutoDir text={humanize(label)} className="truncate font-medium" />
+        <AutoDir text={label} className="truncate font-medium" />
         <span className="num text-ink-3">{count}</span>
       </div>
       <div className="flex max-h-[560px] min-h-12 flex-col gap-2 overflow-y-auto p-0.5">{children}</div>
@@ -274,7 +267,7 @@ export function KanbanSection({ s }: { s: SectionOf<'kanban'> }) {
         <Empty text={data?.missing ?? 'Cards appear here as work comes in.'} />
       ) : (
         <DndContext sensors={sensors} onDragEnd={onDragEnd}>
-          <div className="-mx-1 flex items-start gap-3 overflow-x-auto px-1 pb-1">
+          <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
             {columns.map((c) => {
               const items = rows.filter((r) => String(r[s.groupBy] ?? '—') === c);
               return (
@@ -282,7 +275,7 @@ export function KanbanSection({ s }: { s: SectionOf<'kanban'> }) {
                   {items.map((r) => (
                     <KanbanCard key={r.id} row={r} data={data} s={s} draggable={draggable} />
                   ))}
-                  {items.length === 0 && <div className="rounded-lg border border-dashed border-border px-2 py-3 text-center text-[11.5px] text-ink-4">{t('Empty')}</div>}
+                  {items.length === 0 && <div className="rounded-lg border border-dashed border-border px-2 py-3 text-center text-[11.5px] text-ink-4">Empty</div>}
                 </KanbanColumn>
               );
             })}
@@ -320,7 +313,7 @@ export function ListSection({ s }: { s: SectionOf<'list'> }) {
                     checked={checked}
                     onChange={(e) => void patch(r, { [s.checkField!]: e.target.checked })}
                     className="mt-0.5 size-4 shrink-0 accent-[var(--brand)]"
-                    aria-label={t('Done')}
+                    aria-label="Done"
                   />
                 )}
                 <button type="button" onClick={() => openRow(r, data?.fields ?? [], data?.titleField ?? 'title')} className="min-w-0 flex-1 text-start">
@@ -362,7 +355,7 @@ export function TimelineSection({ s }: { s: SectionOf<'timeline'> }) {
               <span className="relative mt-1.5 size-2 shrink-0 rounded-full border-2 border-brand bg-surface" />
               <button type="button" onClick={() => openRow(r, data?.fields ?? [], data?.titleField ?? 'title')} className="min-w-0 flex-1 text-start">
                 <AutoDir as="p" text={titleOf(r, data, s.titleField)} className="text-[13px] leading-snug" />
-                <p className="num text-[11.5px] text-ink-3">{new Date(String(r[dateField])).toLocaleString(locale(), { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                <p className="num text-[11.5px] text-ink-3">{new Date(String(r[dateField])).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
               </button>
             </li>
           ))}
@@ -405,12 +398,12 @@ export function CalendarSection({ s }: { s: SectionOf<'calendar'> }) {
     const start = startOfWeek(new Date());
     start.setDate(start.getDate() + offset * 7);
     days = Array.from({ length: 7 }, (_, i) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + i));
-    label = `${days[0].toLocaleDateString(locale(), { month: 'short', day: 'numeric' })} – ${days[6].toLocaleDateString(locale(), { month: 'short', day: 'numeric' })}`;
+    label = `${days[0].toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} – ${days[6].toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`;
   } else {
     const first = new Date(new Date().getFullYear(), new Date().getMonth() + offset, 1);
     const start = startOfWeek(first);
     days = Array.from({ length: 42 }, (_, i) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + i));
-    label = first.toLocaleDateString(locale(), { month: 'long', year: 'numeric' });
+    label = first.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
   }
   const month = view === 'month' ? new Date(new Date().getFullYear(), new Date().getMonth() + offset, 1).getMonth() : -1;
 
@@ -418,20 +411,20 @@ export function CalendarSection({ s }: { s: SectionOf<'calendar'> }) {
     <Frame title={s.title} description={s.description}>
       <div className="mb-2 flex items-center gap-1 text-[12.5px]">
         <span className="font-medium">{label}</span>
-        <button type="button" className="ms-auto grid size-6 place-items-center rounded hover:bg-muted" onClick={() => setOffset(offset - 1)} aria-label={t('Previous')}>
-          <ChevronLeft className="size-3.5 rtl:-scale-x-100" />
+        <button type="button" className="ms-auto grid size-6 place-items-center rounded hover:bg-muted" onClick={() => setOffset(offset - 1)} aria-label="Previous">
+          <ChevronLeft className="size-3.5" />
         </button>
         <button type="button" className="rounded px-1.5 py-0.5 text-ink-3 hover:bg-muted" onClick={() => setOffset(0)}>
-          {t('Today')}
+          Today
         </button>
-        <button type="button" className="grid size-6 place-items-center rounded hover:bg-muted" onClick={() => setOffset(offset + 1)} aria-label={t('Next')}>
-          <ChevronRight className="size-3.5 rtl:-scale-x-100" />
+        <button type="button" className="grid size-6 place-items-center rounded hover:bg-muted" onClick={() => setOffset(offset + 1)} aria-label="Next">
+          <ChevronRight className="size-3.5" />
         </button>
       </div>
       <div className="grid grid-cols-7 gap-px overflow-hidden rounded-lg border border-border bg-border">
         {days.slice(0, 7).map((d) => (
           <div key={`h${d.getDay()}`} className="bg-surface-2 px-2 py-1 text-[11px] text-ink-3">
-            {d.toLocaleDateString(locale(), { weekday: 'short' })}
+            {d.toLocaleDateString(undefined, { weekday: 'short' })}
           </div>
         ))}
         {days.map((d) => {

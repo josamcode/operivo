@@ -1,4 +1,3 @@
-import { t } from '@/lib/i18n';
 import type { KpiItem, SectionOf } from '@opervio/contracts';
 import { useCallback, type ReactNode } from 'react';
 import { formatNumber } from '@/lib/format';
@@ -24,24 +23,13 @@ export function Frame({ title, description, children, className, bare }: { title
 
 const TONE_MAP = { neutral: 'neutral', positive: 'positive', warning: 'warning', negative: 'negative', info: 'info' } as const;
 
-/** Kind badges the page header already shows ("Priority", "Main focus"…). */
-const KIND_WORDS = /^(main( focus)?|priority|supporting|continuous|goal|idea|experiment|الأولوية|أولوية|داعم|مستمر|هدف|فكرة|تجربة)$/i;
-
 export function HeroSection({ s }: { s: SectionOf<'hero'> }) {
-  const { pageTitle } = usePageCtx();
-  // The page header already shows the title and focus kind — don't repeat them.
-  const title = s.title && s.title.trim().toLowerCase() !== pageTitle.trim().toLowerCase() ? s.title : null;
-  const status = s.status && !KIND_WORDS.test(s.status.label.trim()) ? s.status : null;
   return (
     <div className="space-y-4 py-1">
-      {(title || status) && (
+      {(s.title || s.status) && (
         <div className="flex items-center gap-2">
-          {title && <AutoDir as="h2" text={title} className="text-[15px] font-semibold" />}
-          {status && (
-            <Chip tone={TONE_MAP[status.tone ?? 'neutral']}>
-              <bdi>{status.label}</bdi>
-            </Chip>
-          )}
+          {s.title && <AutoDir as="h2" text={s.title} className="text-[15px] font-semibold" />}
+          {s.status && <Chip tone={TONE_MAP[s.status.tone ?? 'neutral']}>{s.status.label}</Chip>}
         </div>
       )}
       <Markdown className="max-w-[72ch] text-[15px] leading-relaxed text-ink-2">{s.summary}</Markdown>
@@ -113,7 +101,7 @@ function Spark({ metric, range, height = 44 }: { metric: string; range?: string;
     }),
     [data],
   );
-  if (!data?.points.length) return <p className="text-[12px] text-ink-3">{t('No data yet')}</p>;
+  if (!data?.points.length) return <p className="text-[12px] text-ink-3">No data yet</p>;
   return <EChart option={option} height={height} />;
 }
 
@@ -163,7 +151,7 @@ function ProgressItemRow({ item }: { item: SectionOf<'progress'>['items'][number
     <li className="space-y-1.5">
       <div className="flex items-baseline justify-between gap-3 text-[13px]">
         <AutoDir text={item.label} className="truncate" />
-        <span className="num shrink-0 text-ink-2" dir="ltr">
+        <span className="num shrink-0 text-ink-2">
           {formatNumber(current)} / {formatNumber(item.target)}
           {item.unit ? ` ${item.unit}` : ''}
         </span>

@@ -1,7 +1,6 @@
 import type { DataSource, MessageDTO, NotificationDTO, RunDTO, ServerEvent } from '@opervio/contracts';
 import type { Query, QueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { trActivity } from './i18n';
 
 type Listener = (n: NotificationDTO) => void;
 const notificationListeners = new Set<Listener>();
@@ -115,9 +114,9 @@ export function connectLive(qc: QueryClient) {
         notificationListeners.forEach((fn) => fn(n));
         if (n.kind === 'decision' || n.kind === 'failed' || n.kind === 'action' || n.kind === 'completed' || n.kind === 'reminder') {
           const opts = { description: n.body ?? undefined, duration: n.kind === 'completed' ? 5000 : 8000 };
-          if (n.kind === 'failed') toast.error(trActivity(n.title), opts);
-          else if (n.kind === 'completed') toast.success(trActivity(n.title), opts);
-          else toast(trActivity(n.title), opts);
+          if (n.kind === 'failed') toast.error(n.title, opts);
+          else if (n.kind === 'completed') toast.success(n.title, opts);
+          else toast(n.title, opts);
         }
         if (document.hidden && 'Notification' in window && Notification.permission === 'granted') {
           new Notification(n.title, { body: n.body ?? undefined, tag: n.id });

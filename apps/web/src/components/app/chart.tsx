@@ -5,7 +5,6 @@ import { SVGRenderer } from 'echarts/renderers';
 import type { EChartsCoreOption } from 'echarts/core';
 import { useEffect, useMemo, useRef } from 'react';
 import { useIsDark } from '@/hooks/use-theme';
-import { isRtlUi } from '@/lib/i18n';
 
 echarts.use([LineChart, BarChart, FunnelChart, GridComponent, TooltipComponent, LegendComponent, SVGRenderer]);
 
@@ -33,7 +32,7 @@ export function chartTheme(dark: boolean): ChartTheme {
     grid: read('--grid'),
     surface: read('--surface'),
     border: read('--border'),
-    font: isRtlUi() ? 'IBM Plex Sans Arabic, Geist Variable, system-ui, sans-serif' : 'Geist Variable, IBM Plex Sans Arabic, system-ui, sans-serif',
+    font: 'Geist Variable, IBM Plex Sans Arabic, system-ui, sans-serif',
     ramp: dark
       ? ['#184f95', '#1c5cab', '#256abf', '#2a78d6', '#3987e5', '#5598e7', '#6da7ec', '#86b6ef']
       : ['#86b6ef', '#6da7ec', '#5598e7', '#3987e5', '#2a78d6', '#256abf', '#1c5cab', '#184f95'],
@@ -79,5 +78,5 @@ export function EChart({ option, height, className }: { option: (t: ChartTheme) 
     chart.current?.setOption({ animationDuration: 400, textStyle: { fontFamily: theme.font }, ...option(theme) }, true);
   }, [option, theme]);
 
-  return <div ref={ref} dir="ltr" className={className} style={{ height, width: '100%' }} />;
+  return <div ref={ref} className={className} style={{ height, width: '100%' }} />;
 }

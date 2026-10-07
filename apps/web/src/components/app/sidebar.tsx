@@ -1,4 +1,3 @@
-import { t } from '@/lib/i18n';
 import type { NavItemDTO } from '@opervio/contracts';
 import { Link, useRouterState } from '@tanstack/react-router';
 import { FolderOpen, House, Moon, Search, Settings, Sun } from 'lucide-react';
@@ -9,7 +8,7 @@ import { pageIcon } from './page-icon';
 import { LiveDot, NoorMark } from './primitives';
 import { useUi } from './ui-state';
 
-function NavLink({ to, params, icon: Icon, label, active, live }: { to: string; params?: Record<string, string>; icon: React.ComponentType<{ className?: string; strokeWidth?: number }>; label: string; active: boolean; live?: boolean }) {
+function NavLink({ to, params, icon: Icon, label, active, live, rtl }: { to: string; params?: Record<string, string>; icon: React.ComponentType<{ className?: string; strokeWidth?: number }>; label: string; active: boolean; live?: boolean; rtl?: boolean }) {
   return (
     <Link
       to={to}
@@ -20,7 +19,9 @@ function NavLink({ to, params, icon: Icon, label, active, live }: { to: string; 
       )}
     >
       <Icon className={cn('size-4 shrink-0', active ? 'text-foreground' : 'text-ink-3 group-hover:text-ink-2')} strokeWidth={1.75} />
-      <span dir="auto" className="truncate ui-align">{label}</span>
+      <span className="truncate" dir={rtl ? 'rtl' : undefined}>
+        {label}
+      </span>
       {live && <LiveDot className="ms-auto" />}
     </Link>
   );
@@ -48,14 +49,14 @@ export function Sidebar({ className, onNavigate }: { className?: string; onNavig
           className="flex h-8 w-full items-center gap-2 rounded-md border border-border bg-surface px-2 text-[13px] text-ink-3 shadow-xs transition-colors hover:text-ink-2"
         >
           <Search className="size-3.5" strokeWidth={2} />
-          {t('Search or ask Noor')}
-          <kbd className="ms-auto rounded border border-border px-1 text-[10.5px] text-ink-3" dir="ltr">Ctrl K</kbd>
+          Search or ask Noor
+          <kbd className="ms-auto rounded border border-border px-1 text-[10.5px] text-ink-3">Ctrl K</kbd>
         </button>
       </div>
 
       <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2.5 py-1">
-        <NavLink to="/" icon={House} label={t('Home')} active={path === '/'} />
-        {nav.length > 0 && <div className="mt-3 mb-1 px-2 text-[11.5px] font-medium text-ink-3">{t('Your areas')}</div>}
+        <NavLink to="/" icon={House} label="Home" active={path === '/'} />
+        {nav.length > 0 && <div className="mt-3 mb-1 px-2 text-[11.5px] font-medium text-ink-3">Your areas</div>}
         {nav.map((n) => (
           <NavLink
             key={n.slug}
@@ -63,18 +64,19 @@ export function Sidebar({ className, onNavigate }: { className?: string; onNavig
             params={{ slug: n.slug }}
             icon={pageIcon(n.icon)}
             label={n.title}
+            rtl={/[֐-ࣿ]/.test(n.title)}
             active={path === `/p/${n.slug}`}
             live={n.activeAgents > 0}
           />
         ))}
         <div className="mt-3" />
-        <NavLink to="/outputs" icon={FolderOpen} label={t('Outputs')} active={path === '/outputs'} />
-        <NavLink to="/settings" icon={Settings} label={t('Settings')} active={path === '/settings'} />
+        <NavLink to="/outputs" icon={FolderOpen} label="Outputs" active={path === '/outputs'} />
+        <NavLink to="/settings" icon={Settings} label="Settings" active={path === '/settings'} />
       </nav>
 
       <div className="flex items-center gap-2 border-t border-border px-4 py-3">
-        <span dir="auto" className="truncate text-[13px] text-ink-2 ui-align">{data?.founder?.name}</span>
-        <button type="button" onClick={toggle} className="ms-auto grid size-7 place-items-center rounded-md text-ink-3 hover:bg-surface hover:text-foreground" aria-label={t('Toggle theme')}>
+        <span className="truncate text-[13px] text-ink-2">{data?.founder?.name}</span>
+        <button type="button" onClick={toggle} className="ms-auto grid size-7 place-items-center rounded-md text-ink-3 hover:bg-surface hover:text-foreground" aria-label="Toggle theme">
           {dark ? <Sun className="size-4" strokeWidth={1.75} /> : <Moon className="size-4" strokeWidth={1.75} />}
         </button>
       </div>

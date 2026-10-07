@@ -1,4 +1,3 @@
-import { locale, t as tr } from '@/lib/i18n';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ALWAYS_ASK_OPTIONS, Autonomy, CommStyle, EFFORT_LABEL, Language, type AiSettings, type RoleDefaults, type SettingsDTO, type ToolSettings } from '@opervio/contracts';
 import { useQueryClient } from '@tanstack/react-query';
@@ -9,7 +8,7 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { TopBar } from '@/components/app/app-shell';
-import { AutoDir, Chip, Meta } from '@/components/app/primitives';
+import { AutoDir, Chip } from '@/components/app/primitives';
 import { SimpleSelect } from '@/components/app/simple-select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,8 +33,8 @@ function Row({ label, hint, children }: { label: string; hint?: string; children
   return (
     <div className="grid gap-2 border-b border-border py-4 last:border-0 md:grid-cols-[240px_1fr] md:gap-6">
       <div>
-        <p className="text-[13px] font-medium">{tr(label)}</p>
-        {hint && <p className="mt-0.5 text-[12px] text-ink-3">{tr(hint)}</p>}
+        <p className="text-[13px] font-medium">{label}</p>
+        {hint && <p className="mt-0.5 text-[12px] text-ink-3">{hint}</p>}
       </div>
       <div className="min-w-0">{children}</div>
     </div>
@@ -63,14 +62,14 @@ function Profile({ s }: { s: SettingsDTO }) {
     await api.put('/api/settings/founder', v);
     await qc.invalidateQueries({ queryKey: ['settings'] });
     await qc.invalidateQueries({ queryKey: ['bootstrap'] });
-    toast.success(tr('Profile saved'));
+    toast.success('Profile saved');
     form.reset(v);
   });
   const ask = form.watch('alwaysAsk');
   return (
     <form onSubmit={save}>
       <Row label="Name">
-        <Input dir="auto" {...form.register('name')} className="ui-align max-w-sm" />
+        <Input {...form.register('name')} className="max-w-sm" />
       </Row>
       <Row label="Language" hint="Noor talks to you in this language.">
         <SimpleSelect
@@ -86,7 +85,7 @@ function Profile({ s }: { s: SettingsDTO }) {
         <Textarea dir="auto" {...form.register('work')} className="max-w-xl" />
       </Row>
       <Row label="Realistic time" hint="What you can actually give per day or week.">
-        <Input dir="auto" {...form.register('timeAvailable')} className="ui-align max-w-sm" />
+        <Input dir="auto" {...form.register('timeAvailable')} className="max-w-sm" />
       </Row>
       <Row label="How Noor talks">
         <SimpleSelect
@@ -120,20 +119,20 @@ function Profile({ s }: { s: SettingsDTO }) {
                 checked={ask.includes(o.id)}
                 onChange={(e) => form.setValue('alwaysAsk', e.target.checked ? [...ask, o.id] : ask.filter((a) => a !== o.id), { shouldDirty: true })}
               />
-              {tr(o.label)}
+              {o.label}
             </label>
           ))}
         </div>
       </Row>
       <Row label="Links" hint="Public profiles your team can learn from.">
         <div className="grid max-w-xl gap-2">
-          <Input dir="ltr" placeholder="GitHub" {...form.register('links.github')} className="ui-align" />
-          <Input dir="ltr" placeholder={tr('Website')} {...form.register('links.website')} className="ui-align" />
-          <Input dir="ltr" placeholder={tr('Social profile')} {...form.register('links.social')} className="ui-align" />
+          <Input placeholder="GitHub" {...form.register('links.github')} />
+          <Input placeholder="Website" {...form.register('links.website')} />
+          <Input placeholder="Social profile" {...form.register('links.social')} />
         </div>
       </Row>
       <Row label="Timezone">
-        <Input dir="ltr" {...form.register('timezone')} className="ui-align max-w-sm" />
+        <Input {...form.register('timezone')} className="max-w-sm" />
       </Row>
       <Row label="Appearance">
         <SimpleSelect
@@ -148,7 +147,7 @@ function Profile({ s }: { s: SettingsDTO }) {
       </Row>
       <div className="flex justify-end pt-4">
         <Button type="submit" disabled={!form.formState.isDirty || form.formState.isSubmitting}>
-          {tr('Save profile')}
+          Save profile
         </Button>
       </div>
     </form>
@@ -173,7 +172,7 @@ function Ai({ s }: { s: SettingsDTO }) {
     try {
       await api.put('/api/settings/ai', next);
       await qc.invalidateQueries({ queryKey: ['settings'] });
-      toast.success(tr('Saved'));
+      toast.success('Saved');
     } catch (err) {
       toast.error((err as Error).message);
     }
@@ -190,8 +189,8 @@ function Ai({ s }: { s: SettingsDTO }) {
               {p.available ? <Check className="mt-0.5 size-4 text-positive" /> : <TriangleAlert className="mt-0.5 size-4 text-warning" />}
               <div className="min-w-0">
                 <p className="text-[13px] font-medium">{p.label}</p>
-                <p className="truncate text-[12px] text-ink-3">{p.available ? tr('Version {v}', { v: p.version ?? '' }) : (p.error ?? tr('Not found'))}</p>
-                <p className="text-[11.5px] text-ink-3">{tr('Effort: {list}', { list: p.efforts.map((e) => tr(EFFORT_LABEL[e])).join('، ') })}</p>
+                <p className="truncate text-[12px] text-ink-3">{p.available ? `Version ${p.version}` : (p.error ?? 'Not found')}</p>
+                <p className="text-[11.5px] text-ink-3">Effort: {p.efforts.map((e) => EFFORT_LABEL[e]).join(', ')}</p>
               </div>
             </div>
           ))}
@@ -207,7 +206,7 @@ function Ai({ s }: { s: SettingsDTO }) {
             setRefreshing(false);
           }}
         >
-          <RefreshCw className={cn(refreshing && 'animate-spin')} /> {tr('Check again')}
+          <RefreshCw className={cn(refreshing && 'animate-spin')} /> Check again
         </Button>
       </Row>
       {ROLES.map((r) => {
@@ -217,7 +216,7 @@ function Ai({ s }: { s: SettingsDTO }) {
           <Row key={r.id} label={r.label} hint={r.hint}>
             <div className="flex flex-wrap gap-2">
               <SimpleSelect
-                ariaLabel={`${tr(r.label)} · ${tr('Provider')}`}
+                ariaLabel={`${r.label} provider`}
                 value={v.provider}
                 onChange={(p) => setRole(r.id, { provider: p as RoleDefaults['provider'], model: 'default' })}
                 options={[
@@ -227,19 +226,16 @@ function Ai({ s }: { s: SettingsDTO }) {
                 ]}
               />
               <SimpleSelect
-                ariaLabel={`${tr(r.label)} · ${tr('Model')}`}
+                ariaLabel={`${r.label} model`}
                 value={v.model}
                 onChange={(m) => setRole(r.id, { model: m })}
                 options={[{ value: 'default', label: 'Default model' }, ...(prov?.models ?? []).filter((m) => m.id !== 'default').map((m) => ({ value: m.id, label: m.label })), ...(prov?.models.some((m) => m.id === v.model) || v.model === 'default' ? [] : [{ value: v.model, label: v.model }])]}
               />
               <SimpleSelect
-                ariaLabel={`${tr(r.label)} · ${tr('Effort')}`}
+                ariaLabel={`${r.label} effort`}
                 value={v.effort}
                 onChange={(e) => setRole(r.id, { effort: e as RoleDefaults['effort'] })}
-                options={['auto', ...(prov?.efforts ?? ['low', 'medium', 'high', 'xhigh'])].map((e) => ({
-                  value: e,
-                  label: tr('Effort: {e}', { e: tr(EFFORT_LABEL[e as keyof typeof EFFORT_LABEL]) }),
-                }))}
+                options={['auto', ...(prov?.efforts ?? ['low', 'medium', 'high', 'xhigh'])].map((e) => ({ value: e, label: `Effort: ${EFFORT_LABEL[e as keyof typeof EFFORT_LABEL]}` }))}
               />
             </div>
           </Row>
@@ -263,7 +259,7 @@ function Tools({ s }: { s: SettingsDTO }) {
     setTools(next);
     await api.put('/api/settings/tools', next);
     await qc.invalidateQueries({ queryKey: ['settings'] });
-    toast.success(tr('Saved'));
+    toast.success('Saved');
   };
   const py = s.toolStatus.python;
   return (
@@ -287,17 +283,15 @@ function Tools({ s }: { s: SettingsDTO }) {
                   <span className={cn('grid size-3.5 place-items-center rounded-full border', tools.browserMode === m.id ? 'border-brand' : 'border-border-strong')}>
                     {tools.browserMode === m.id && <span className="size-1.5 rounded-full bg-brand" />}
                   </span>
-                  {tr(m.title)}
+                  {m.title}
                 </span>
-                <span className="mt-1 block text-[12px] text-ink-3">{tr(m.body)}</span>
+                <span className="mt-1 block text-[12px] text-ink-3">{m.body}</span>
               </button>
             ))}
           </div>
           {tools.browserMode === 'your-chrome' ? (
             <p className="text-[12.5px] text-ink-3">
-              {tr(
-                'Keep Chrome open with the Claude in Chrome extension signed in. The first time an agent acts on a site, Chrome asks you to approve it — Opervio notifies you when an agent is waiting. Browser tasks run on Claude, since Codex can’t drive your Chrome.',
-              )}
+              Keep Chrome open with the Claude in Chrome extension signed in. The first time an agent acts on a site, Chrome asks you to approve it — Opervio notifies you when an agent is waiting. Browser tasks run on Claude, since Codex can’t drive your Chrome.
             </p>
           ) : (
             <div className="flex flex-wrap items-center gap-3">
@@ -312,7 +306,7 @@ function Tools({ s }: { s: SettingsDTO }) {
               />
               <label className="flex items-center gap-2 text-[13px]">
                 <Switch checked={!tools.browserHeadless} onCheckedChange={(v) => void save({ ...tools, browserHeadless: !v })} />
-                {tr('Show the window while agents work')}
+                Show the window while agents work
               </label>
             </div>
           )}
@@ -321,7 +315,8 @@ function Tools({ s }: { s: SettingsDTO }) {
       <Row label="Python" hint="An isolated environment agents use for data, spreadsheets, documents and charts.">
         <div className="space-y-2">
           <p className="text-[13px]">
-            <Meta parts={[py.available ? `Python ${py.version}` : tr('Python not found'), tr(py.venv ? 'environment ready' : 'environment not created')]} />
+            {py.available ? `Python ${py.version}` : 'Python not found'}
+            {py.venv ? ' · environment ready' : ' · environment not created'}
           </p>
           {py.packages.length > 0 && (
             <div className="flex flex-wrap gap-1">
@@ -338,26 +333,19 @@ function Tools({ s }: { s: SettingsDTO }) {
             onClick={async () => {
               await api.post('/api/tools/python/install');
               await qc.invalidateQueries({ queryKey: ['settings'] });
-              toast(tr('Installing Python packages in the background…'));
+              toast('Installing Python packages in the background…');
             }}
           >
             {py.installing ? <Loader2 className="animate-spin" /> : <RefreshCw />}
-            {tr(py.venv ? 'Repair / update' : 'Set up environment')}
+            {py.venv ? 'Repair / update' : 'Set up environment'}
           </Button>
         </div>
       </Row>
       <Row label="Git">
-        <p className="text-[13px]">
-          <bdi>{s.toolStatus.git.available ? `Git ${s.toolStatus.git.version}` : tr('Git not found')}</bdi>
-        </p>
+        <p className="text-[13px]">{s.toolStatus.git.available ? `Git ${s.toolStatus.git.version}` : 'Git not found'}</p>
       </Row>
       <Row label="Workspace" hint="Where agents keep their working files and deliverables.">
-        <Input
-          defaultValue={tools.workspaceDir}
-          onBlur={(e) => e.target.value !== tools.workspaceDir && void save({ ...tools, workspaceDir: e.target.value })}
-          className="max-w-xl font-mono text-[12.5px]"
-          dir="ltr"
-        />
+        <Input defaultValue={tools.workspaceDir} onBlur={(e) => e.target.value !== tools.workspaceDir && void save({ ...tools, workspaceDir: e.target.value })} className="max-w-xl font-mono text-[12.5px]" />
       </Row>
     </div>
   );
@@ -366,7 +354,7 @@ function Tools({ s }: { s: SettingsDTO }) {
 function Routines({ s }: { s: SettingsDTO }) {
   const qc = useQueryClient();
   const refresh = () => qc.invalidateQueries({ queryKey: ['settings'] });
-  if (!s.routines.length) return <p className="py-6 text-[13px] text-ink-3">{tr('No routines yet. Ask Noor for things like a daily plan or a weekly content review.')}</p>;
+  if (!s.routines.length) return <p className="py-6 text-[13px] text-ink-3">No routines yet. Ask Noor for things like a daily plan or a weekly content review.</p>;
   return (
     <div>
       {s.routines.map((r) => (
@@ -381,20 +369,15 @@ function Routines({ s }: { s: SettingsDTO }) {
           <div className="min-w-0 flex-1">
             <AutoDir as="p" text={r.title} className="text-[13.5px] font-medium" />
             <p className="text-[12px] text-ink-3">
-              <Meta
-                parts={[
-                  tr(r.kind === 'reminder' ? 'Reminder' : r.kind === 'noor' ? 'Noor' : 'Agent task'),
-                  r.schedule,
-                  r.focus?.name,
-                  r.nextRunAt && r.enabled ? tr('next {when}', { when: new Date(r.nextRunAt).toLocaleString(locale(), { weekday: 'short', hour: '2-digit', minute: '2-digit' }) }) : null,
-                ]}
-              />
+              {r.kind === 'reminder' ? 'Reminder' : r.kind === 'noor' ? 'Noor' : 'Agent task'} · <code>{r.schedule}</code>
+              {r.focus ? ` · ${r.focus.name}` : ''}
+              {r.nextRunAt && r.enabled ? ` · next ${new Date(r.nextRunAt).toLocaleString(undefined, { weekday: 'short', hour: '2-digit', minute: '2-digit' })}` : ''}
             </p>
           </div>
           <Button
             size="icon-sm"
             variant="ghost"
-            aria-label={tr('Delete routine')}
+            aria-label="Delete routine"
             onClick={async () => {
               await api.del(`/api/routines/${r.id}`);
               await refresh();
@@ -413,20 +396,22 @@ function Memory() {
   const { data = [], refetch } = useMemories(q.trim().length >= 2 ? q.trim() : undefined);
   return (
     <div className="space-y-3 pt-2">
-      <Input dir="auto" value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr('Search memory')} className="max-w-sm" />
-      {data.length === 0 && <p className="text-[13px] text-ink-3">{tr(q ? 'Nothing matches.' : 'Noor and the team save durable facts and preferences here as you work together.')}</p>}
+      <Input dir="auto" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search memory" className="max-w-sm" />
+      {data.length === 0 && <p className="text-[13px] text-ink-3">{q ? 'Nothing matches.' : 'Noor and the team save durable facts and preferences here as you work together.'}</p>}
       <ul className="divide-y divide-border rounded-xl border border-border bg-surface">
         {data.map((m) => (
           <li key={m.id} className="flex items-start gap-3 px-4 py-3">
-            <Chip className="mt-0.5">{tr(m.kind)}</Chip>
+            <Chip className="mt-0.5">{m.kind}</Chip>
             <div className="min-w-0 flex-1">
-              <AutoDir as="p" block text={m.content} className="text-[13px]" />
-              <Meta className="block text-[11.5px] text-ink-3" parts={[m.source, ago(m.createdAt)]} />
+              <AutoDir as="p" text={m.content} className="text-[13px]" />
+              <p className="text-[11.5px] text-ink-3">
+                {m.source} · {ago(m.createdAt)}
+              </p>
             </div>
             <Button
               size="icon-sm"
               variant="ghost"
-              aria-label={tr('Forget')}
+              aria-label="Forget"
               onClick={async () => {
                 await api.del(`/api/memories/${m.id}`);
                 await refetch();
@@ -448,25 +433,23 @@ export function SettingsPage() {
   const { data: s } = useSettings();
   return (
     <>
-      <TopBar title={tr('Settings')} />
+      <TopBar title="Settings" />
       <div className="mx-auto w-full max-w-[980px] space-y-5 px-4 py-8 lg:px-8">
-        <h1 className="text-[26px] leading-tight font-semibold tracking-[-0.025em]">{tr('Settings')}</h1>
-        <div className="border-b border-border">
-          <div className="no-scrollbar -mb-px flex gap-1 overflow-x-auto">
-            {TABS.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => void navigate({ to: '/settings', search: { tab: t.id } as never })}
-                className={cn('shrink-0 border-b-2 px-3 py-2 text-[13px] whitespace-nowrap', tab === t.id ? 'border-foreground font-medium' : 'border-transparent text-ink-3 hover:text-ink-2')}
-              >
-                {tr(t.label)}
-              </button>
-            ))}
-          </div>
+        <h1 className="text-[26px] leading-tight font-semibold tracking-[-0.025em]">Settings</h1>
+        <div className="flex gap-1 border-b border-border">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => void navigate({ to: '/settings', search: { tab: t.id } as never })}
+              className={cn('-mb-px border-b-2 px-3 py-2 text-[13px]', tab === t.id ? 'border-foreground font-medium' : 'border-transparent text-ink-3 hover:text-ink-2')}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
         {!s ? (
-          <p className="text-[13px] text-ink-3">{tr('Loading…')}</p>
+          <p className="text-[13px] text-ink-3">Loading…</p>
         ) : (
           <div className="rounded-xl border border-border bg-surface px-5 shadow-sm">
             {tab === 'profile' && <Profile s={s} />}
