@@ -37,10 +37,19 @@ export async function buildApp() {
 
   // Production: serve the built web app from the same origin.
   if (await fs.pathExists(config.webDist)) {
-    await app.register(fastifyStatic, { root: config.webDist, wildcard: false });
+    // Files are looked up per request (wildcard), so a rebuilt UI is served without restarting the server.
+    // Hashed assets are cached forever; index.html is revalidated so a new build is picked up on reload.
+    await app.register(fastifyStatic, {
+      root: config.webDist,
+      setHeaders: (res, filePath) => {
+        res.header('cache-control', /[\\/]assets[\\/]/.test(filePath) ? 'public, max-age=31536000, immutable' : 'no-cache');
+      },
+    });
     app.setNotFoundHandler((req, reply) => {
       if (req.url.startsWith('/api') || req.url.startsWith('/mcp') || req.url.startsWith('/internal')) return reply.code(404).send({ error: 'Not found' });
-      return reply.sendFile('index.html');
+      // A missing script or stylesheet is a 404, never the app shell (which the browser would reject as a module).
+      if (req.url.startsWith('/assets/')) return reply.code(404).send({ error: 'Not found' });
+      return reply.header('cache-control', 'no-cache').sendFile('index.html');
     });
   }
   return app;
