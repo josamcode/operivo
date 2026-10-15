@@ -15,6 +15,9 @@
     "test": "pnpm -r --if-present run test",
     "typecheck": "pnpm -r --if-present run typecheck",
     "e2e": "pnpm --filter @opervio/web run e2e",
+    "site:dev": "pnpm --filter @opervio/site run dev",
+    "site:build": "pnpm --filter @opervio/site run build",
+    "site:e2e": "pnpm --filter @opervio/site run e2e",
     "db:up": "docker compose up -d",
     "db:migrate": "pnpm --filter @opervio/server run db:deploy"
   }

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#000000" />
+    <title>Opervio — You're the founder. Your AI team handles the work.</title>
+    <meta
+      name="description"
+      content="Opervio is a local-first company operating system. Noor, your AI chief of staff, plans your goals, puts specialist agents to work in your browser, files and code, has every result checked, and asks you only what needs you."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/node_modules/@fontsource-variable/dm-sans/files/dm-sans-latin-wght-normal.woff2" />
+    <link rel="preload" as="image" type="image/webp" media="(max-width: 767px)" imagesrcset="/hero/hero-m-480.webp 480w, /hero/hero-m-690.webp 690w" imagesizes="100vw" fetchpriority="high" />
+    <link rel="preload" as="image" type="image/webp" media="(min-width: 768px)" imagesrcset="/hero/hero-1400.webp 1400w, /hero/hero-2100.webp 2100w, /hero/hero-2748.webp 2748w" imagesizes="(min-aspect-ratio: 11/6) 100vw, 184vh" fetchpriority="high" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Opervio" />
+    <meta property="og:title" content="Opervio — You're the founder. Your AI team handles the work." />
+    <meta
+      property="og:description"
+      content="Meet Noor, your AI chief of staff, and the specialist team she hires. Plans, real work, verified results — running on your own computer."
+    />
+    <meta property="og:image" content="/og.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Opervio — You're the founder. Your AI team handles the work." />
+    <meta name="twitter:description" content="Meet Noor, your AI chief of staff, and the specialist team she hires." />
+    <meta name="twitter:image" content="/og.jpg" />
+    <style>
+      /* Static first paint of the hero art. React moves this <picture> into the hero on mount (same element, no reload). */
+      #root { position: relative; z-index: 1; }
+      #prepaint { position: absolute; inset: 0 0 auto 0; height: 78svh; min-height: 520px; overflow: hidden; z-index: 0; pointer-events: none; }
+      #prepaint img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(1.1024); }
+      #prepaint .shade { position: absolute; inset: 0; background-image: linear-gradient(#000 0%, rgb(0 0 0 / 0) 14%), linear-gradient(rgb(0 0 0 / 0) 42%, rgb(0 0 0 / 0.8) 72%, #000 96%); }
+      @media (min-width: 768px) {
+        #prepaint { height: 100svh; max-height: 1100px; min-height: 680px; }
+        #prepaint .shade { background-image: linear-gradient(#000 2%, rgb(0 0 0 / 0) 21%), linear-gradient(rgb(0 0 0 / 0) 64%, #000 98%), linear-gradient(225deg, rgb(0 0 0 / 0) 33%, rgb(0 0 0 / 0.8) 65%, #000 82%); }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="prepaint" aria-hidden="true">
+      <picture id="hero-picture">
+        <source media="(max-width: 767px)" srcset="/hero/hero-m-480.webp 480w, /hero/hero-m-690.webp 690w" sizes="100vw" />
+        <img class="hero-img absolute inset-0 h-full w-full object-cover" src="/hero/hero-2100.webp" srcset="/hero/hero-1400.webp 1400w, /hero/hero-2100.webp 2100w, /hero/hero-2748.webp 2748w" sizes="(min-aspect-ratio: 11/6) 100vw, 184vh" alt="Noor, Opervio's AI chief of staff, waving hello in a sunlit studio office while a small orb of blue light floats above her hand" fetchpriority="high" />
+      </picture>
+      <div class="shade"></div>
+    </div>
+    <div id="root"></div>
+    <noscript>
+      <p style="padding: 24px; font-family: system-ui; color: #fff; background: #000">
+        Opervio — a local-first AI company operating system. Enable JavaScript to view this page.
+      </p>
+    </noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,345 @@
+@import "tailwindcss";
+@import "@fontsource-variable/dm-sans";
+
+/*
+ * Opervio site tokens. Dark, character-led, one accent: Noor blue.
+ * Type scale and geometry follow the reference: 64/48/40px headlines at -0.03em,
+ * 16px media cards, 27px feature cards, pill buttons.
+ */
+@theme {
+  --font-sans: "DM Sans Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", "Cascadia Code", Menlo, Consolas, monospace;
+
+  --color-canvas: #000000;
+  --color-ink: #ffffff;
+  --color-card: #171717;
+  --color-card-2: #1f1f1f;
+  --color-line: rgb(255 255 255 / 0.1);
+  --color-brand: #2672d9;
+  --color-brand-strong: #1f63c0;
+  --color-brand-ink: #7fb0f0;
+  --color-positive: #3fb984;
+  --color-warning: #e0a53a;
+
+  --radius-card: 16px;
+  --radius-panel: 27px;
+
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  html {
+    background: #000;
+    color: #fff;
+    scroll-behavior: smooth;
+    scroll-padding-top: 80px;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    margin: 0;
+    background: #000;
+    color: #fff;
+    font-family: var(--font-sans);
+    font-size: 17px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    overflow-x: clip;
+  }
+  ::selection {
+    background: color-mix(in oklch, var(--color-brand) 55%, transparent);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-brand-ink);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+  img {
+    max-width: 100%;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+}
+
+@layer components {
+  .shell {
+    width: 100%;
+    max-width: calc(1280px + 2 * var(--gutter));
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+    --gutter: 20px;
+  }
+  @media (min-width: 768px) {
+    .shell {
+      --gutter: 48px;
+    }
+  }
+  @media (min-width: 1280px) {
+    .shell {
+      --gutter: 96px;
+    }
+  }
+
+  .t-display {
+    font-weight: 600;
+    font-size: clamp(34px, calc(22px + 3.4vw), 64px);
+    line-height: 1;
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+  }
+  .t-h2 {
+    font-weight: 600;
+    font-size: clamp(32px, 4.4vw, 48px);
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+  }
+  .t-h3 {
+    font-weight: 600;
+    font-size: clamp(26px, 3vw, 40px);
+    line-height: 1.18;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+  .t-lead {
+    font-size: clamp(17px, 1.5vw, 20.8px);
+    line-height: 1.4;
+    letter-spacing: -0.03em;
+    color: rgb(255 255 255 / 0.6);
+    text-wrap: pretty;
+  }
+  .t-body {
+    font-size: 15px;
+    line-height: 1.55;
+    color: rgb(255 255 255 / 0.6);
+    text-wrap: pretty;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 50px;
+    padding: 12px 20px;
+    border-radius: 9999px;
+    font-size: 17px;
+    line-height: 24px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    border: 1px solid transparent;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease,
+      transform 0.2s var(--ease-out-quint),
+      box-shadow 0.2s ease;
+    cursor: pointer;
+  }
+  .btn:active {
+    transform: translateY(1px) scale(0.99);
+  }
+  .btn-primary {
+    background: var(--color-brand);
+    border-color: var(--color-brand);
+    color: #fff;
+  }
+  .btn-primary:hover {
+    background: var(--color-brand-strong);
+    border-color: var(--color-brand-strong);
+    box-shadow: 0 8px 30px -8px rgb(57 135 229 / 0.65);
+  }
+  .btn-white {
+    background: #fff;
+    color: #000;
+  }
+  .btn-white:hover {
+    background: rgb(255 255 255 / 0.86);
+  }
+  .btn-ghost {
+    background: rgb(255 255 255 / 0.08);
+    border-color: rgb(255 255 255 / 0.16);
+    color: #fff;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .btn-ghost:hover {
+    background: rgb(255 255 255 / 0.16);
+    border-color: rgb(255 255 255 / 0.26);
+  }
+  .btn-sm {
+    min-height: 40px;
+    padding: 8px 16px;
+    font-size: 15px;
+  }
+
+  /* Saturated workflow cards with a matching glow. */
+  .glow-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-card);
+    border: 1px solid rgb(255 255 255 / 0.1);
+    background-image: linear-gradient(var(--from), var(--to));
+    box-shadow: 0 0 70px 0 var(--glow);
+    isolation: isolate;
+  }
+  .glow-card--violet {
+    --from: #8b5cf6;
+    --to: #513690;
+    --glow: rgb(130 58 255 / 0.4);
+  }
+  .glow-card--blue {
+    --from: #3b82f6;
+    --to: #234c90;
+    --glow: rgb(51 113 212 / 0.4);
+  }
+  .glow-card--amber {
+    --from: #f59e0b;
+    --to: #8f5c06;
+    --glow: rgb(176 114 10 / 0.4);
+  }
+  .glow-card--green {
+    --from: #10b981;
+    --to: #0a6b4c;
+    --glow: rgb(16 160 110 / 0.38);
+  }
+
+  .panel {
+    border-radius: var(--radius-panel);
+    background: var(--color-card);
+    box-shadow: 0 1px 3px 0 rgb(64 64 64 / 0.1);
+  }
+
+  /* Small light-UI widgets that sit on dark panels. */
+  .widget {
+    border-radius: 14px;
+    background: #fff;
+    color: #111;
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.2),
+      0 18px 40px -18px rgb(0 0 0 / 0.55);
+  }
+  .widget-dark {
+    border-radius: 14px;
+    background: #16191f;
+    color: #ecedef;
+    border: 1px solid rgb(255 255 255 / 0.08);
+    box-shadow: 0 24px 60px -24px rgb(0 0 0 / 0.8);
+  }
+
+  .noise-mask-b {
+    mask-image: linear-gradient(to bottom, #000 70%, transparent);
+  }
+}
+
+@keyframes orb-breathe {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0 rgb(57 135 229 / 0.55),
+      0 0 24px 6px rgb(57 135 229 / 0.45);
+  }
+  50% {
+    box-shadow:
+      0 0 0 6px rgb(57 135 229 / 0),
+      0 0 38px 12px rgb(57 135 229 / 0.6);
+  }
+}
+.orb-live {
+  animation: orb-breathe 3.2s ease-in-out infinite;
+}
+
+/* Hero art: Noor sits right of the copy on landscape screens, centred-right on portrait tablets. */
+.hero-img {
+  object-position: 50% 30%;
+}
+@media (min-width: 768px) {
+  .hero-img {
+    object-position: 58% 50%;
+  }
+}
+@media (min-width: 768px) and (min-aspect-ratio: 5/4) {
+  .hero-img {
+    object-position: 25% 50%;
+  }
+}
+
+@keyframes hero-drift {
+  from {
+    transform: scale(1.06) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.12) translate3d(-1.2%, -0.6%, 0);
+  }
+}
+.hero-drift {
+  animation: hero-drift 24s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes orb-glow {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: translate(-50%, -50%) scale(0.92);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+}
+.orb-glow {
+  animation: orb-glow 3.6s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+.live-dot {
+  animation: live-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+.float-y {
+  animation: float-y 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orb-live,
+  .orb-glow,
+  .hero-drift,
+  .live-dot,
+  .float-y {
+    animation: none !important;
+  }
+}
