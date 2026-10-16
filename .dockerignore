@@ -1,0 +1,8 @@
+**/node_modules
+**/dist
+**/test-results
+.git
+.env
+.env.*
+!.env.example
+apps/server/src/generated
